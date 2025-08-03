@@ -51,14 +51,14 @@ export default function RegisterPage() {
       // 2. 프로필 생성
       if (data.user) {
         const { error: profileError } = await supabase
-          .from('profiles')
+          .from('user_table')
           .insert([
             {
-              id: data.user.id,
-              username,
+              user_id: data.user.id,
+              name: username,
+              nickname: username,
               email,
-              level: 1,
-              experience: 0,
+              email_verified: false,
             },
           ]);
 
