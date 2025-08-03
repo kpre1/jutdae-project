@@ -34,9 +34,9 @@ export default function UploadPage() {
 
   const fetchCategories = async () => {
     const { data, error } = await supabase
-      .from('categories')
+      .from('topic')
       .select('*')
-      .order('id');
+      .order('topic_id');
 
     if (error) {
       console.error('카테고리 가져오기 오류:', error);
@@ -63,9 +63,8 @@ export default function UploadPage() {
           {
             title,
             content,
-            url: url || null,
-            category_id: parseInt(categoryId),
-            author_id: user.id,
+            journal: url || null,
+            topic_id: parseInt(categoryId),
           },
         ])
         .select();
@@ -74,7 +73,7 @@ export default function UploadPage() {
         setError('뉴스 업로드 중 오류가 발생했습니다: ' + error.message);
       } else {
         // 성공 시 상세 페이지로 이동
-        router.push(`/news/${data[0].id}`);
+        router.push(`/news/${data[0].news_id}`);
       }
     } catch (err) {
       setError('뉴스 업로드 중 오류가 발생했습니다.');
@@ -150,7 +149,7 @@ export default function UploadPage() {
               >
                 <option value="">카테고리를 선택하세요</option>
                 {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
+                  <option key={category.topic_id} value={category.topic_id}>
                     {category.name}
                   </option>
                 ))}
