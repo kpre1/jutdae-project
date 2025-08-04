@@ -36,42 +36,26 @@ export default function RegisterPage() {
     }
 
     try {
-      // 1. 사용자 계정 생성
+      // 사용자 계정 생성 - 트리거가 자동으로 프로필 생성
       const { data, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            name: username,
+            nickname: username,
+          }
+        }
       });
 
       if (authError) {
         setError(authError.message);
-        setLoading(false);
-        return;
-      }
-
-      // 2. 프로필 생성
-      if (data.user) {
-        const { error: profileError } = await supabase
-          .from('user_table')
-          .insert([
-            {
-              user_id: data.user.id,
-              name: username,
-              nickname: username,
-              email,
-              email_verified: false,
-            },
-          ]);
-
-        if (profileError) {
-          console.error('프로필 생성 오류:', profileError);
-          setError('프로필 생성 중 오류가 발생했습니다.');
-        } else {
-          setSuccess('회원가입이 완료되었습니다! 이메일을 확인해주세요.');
-          // 3초 후 로그인 페이지로 이동
-          setTimeout(() => {
-            router.push('/login');
-          }, 3000);
-        }
+      } else {
+        setSuccess('회원가입이 완료되었습니다! 이메일을 확인해주세요.');
+        // 3초 후 로그인 페이지로 이동
+        setTimeout(() => {
+          router.push('/login');
+        }, 3000);
       }
     } catch (err) {
       setError('회원가입 중 오류가 발생했습니다.');
