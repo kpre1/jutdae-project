@@ -15,27 +15,41 @@ interface NewsItem {
   category_name: string;
 }
 
+const categories = [
+  { id: 100, name: '정치' },
+  { id: 101, name: '경제' },
+  { id: 102, name: '사회' },
+  { id: 103, name: '생활/문화' },
+  { id: 104, name: '세계' },
+  { id: 105, name: 'IT/과학' },
+];
+
 export default function NewsPage() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
 
   useEffect(() => {
-    fetchNews();
-  }, []);
+    fetchNews(1, selectedCategory);
+  }, [selectedCategory]);
 
-  const fetchNews = async (pageNum = 1) => {
+  const fetchNews = async (pageNum = 1, categoryId: number | null = null) => {
     setLoading(true);
     const itemsPerPage = 10;
     const from = (pageNum - 1) * itemsPerPage;
     const to = from + itemsPerPage - 1;
 
-    const { data, error, count } = await supabase
+    let query = supabase
       .from('news')
       .select('*', { count: 'exact' })
       .order('published_at', { ascending: false })
       .range(from, to);
+
+    if (categoryId) query = query.eq('category_id', categoryId);
+
+    const { data, error, count } = await query;
 
     if (error) {
       console.error('뉴스 가져오기 오류:', error);
@@ -52,7 +66,7 @@ export default function NewsPage() {
   const loadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
-    fetchNews(nextPage);
+    fetchNews(nextPage, selectedCategory);
   };
 
   const formatDate = (dateString: string) => {
@@ -70,8 +84,36 @@ export default function NewsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">최신 뉴스</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">뉴스</h1>
 
+        {/* 카테고리 버튼 */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className={`px-4 py-2 rounded-md border ${
+              selectedCategory === null
+                ? 'bg-blue-600 text-white'
+                : 'bg-white text-gray-700 border-gray-300'
+            }`}
+          >
+            전체
+          </button>
+          {categories.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`px-4 py-2 rounded-md border ${
+                selectedCategory === cat.id
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 border-gray-300'
+              }`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+
+        {/* 뉴스 목록 */}
         <div className="space-y-6">
           {news.length === 0 && !loading ? (
             <div className="text-center py-12 text-gray-500">
