@@ -66,9 +66,7 @@ export default function Home() {
             <div className="flex items-center space-x-4">
               {user ? (
                 <>
-                  <Link href="/news/upload" className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                    글 쓰기
-                  </Link>
+              
                   <Link href="/profile" className="text-gray-700 hover:text-blue-600">
                     프로필
                   </Link>
