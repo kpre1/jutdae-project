@@ -162,12 +162,9 @@ export default function NewsPage() {
                   </Link>
 
                   {/* 🔽 새로 추가된 버튼 */}
-                  <Link
-                    href={`/news/summary`}
-                    className="text-green-600 hover:text-green-800 text-sm font-medium"
-                  >
-                    기사 읽고 요약해보기 
-                  </Link>
+                <Link href={`/news/summary/${item.news_id}`}>
+                  기사 읽고 요약해보기 
+                </Link>
 
                   <a
                     href={item.link}
