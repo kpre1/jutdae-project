@@ -60,7 +60,24 @@ const aTagElement = 'body > div > div#ct_wrap > div.ct_scroll_wrapper > div#news
           const title = await page.$eval('#title_area > span', el => el.innerText);
           const content = await page.$eval('#dic_area', el => el.innerText);
 
-          newsArray.push({ category_id: categoryId, category_name: categoryName, title, content, link });
+          // ✅ 대표 이미지 (og:image) 추출
+              let image_url = null;
+              try {
+                image_url = await page.$eval(
+                  'meta[property="og:image"]',
+                  el => el.content
+                );
+              } catch (e) {
+                console.log('이미지 없음 (', link, ')');
+              }
+
+          newsArray.push({ category_id: categoryId, 
+            category_name: categoryName, 
+            title, 
+            content, 
+            link,
+            image_url,
+           });
           console.log(`✓ ${categoryName} - ${title.substring(0, 30)}...`);
 
         } catch (error) {
