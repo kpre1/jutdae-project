@@ -16,12 +16,12 @@ interface NewsItem {
 }
 
 const categories = [
-  { id: 100, name: '정치' },
-  { id: 101, name: '경제' },
-  { id: 102, name: '사회' },
-  { id: 103, name: '생활/문화' },
-  { id: 104, name: '세계' },
-  { id: 105, name: 'IT/과학' },
+  { id: 1, name: '정치' },
+  { id: 2, name: '경제' },
+  { id: 3, name: '사회' },
+  { id: 4, name: '생활/문화' },
+  { id: 5, name: '세계' },
+  { id: 6, name: 'IT/과학' },
 ];
 
 export default function NewsPage() {
