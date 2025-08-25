@@ -21,11 +21,17 @@ const categories = [
   { id: 1, name: '정치' },
   { id: 2, name: '경제' },
   { id: 3, name: '사회' },
+<<<<<<< HEAD
   { id: 4, name: '생활/문화' }, // '문화' → '생활/문화'로 수정
   { id: 5, name: 'IT/과학' },
   { id: 6, name: '스포츠' },
   { id: 7, name: '국제' },
   { id: 8, name: '환경' }, // 환경 카테고리 추가
+=======
+  { id: 4, name: '생활/문화' },
+  { id: 5, name: '세계' },
+  { id: 6, name: 'IT/과학' },
+>>>>>>> bed1f6822658e1113a1fded44f53e3d04b81b764
 ];
 
 export default function NewsPage() {
