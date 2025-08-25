@@ -1,4 +1,5 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
@@ -7,38 +8,37 @@ interface NewsItem {
   news_id: number;
   title: string;
   content: string;
-  image_url: string;
+  image_url: string | null;
   published_at: string;
   journal: string;
   topic_id: number;
-  topic: {
+  topics?: {  // topics 테이블과의 관계 (옵션)
     name: string;
   };
 }
 
-// 환경 카테고리 추가된 업데이트된 카테고리 목록
+// 카테고리 매핑 (데이터베이스 구조와 일치)
 const categories = [
   { id: 1, name: '정치' },
   { id: 2, name: '경제' },
   { id: 3, name: '사회' },
-<<<<<<< HEAD
-  { id: 4, name: '생활/문화' }, // '문화' → '생활/문화'로 수정
+  { id: 4, name: '생활/문화' }, 
   { id: 5, name: 'IT/과학' },
   { id: 6, name: '스포츠' },
   { id: 7, name: '국제' },
-  { id: 8, name: '환경' }, // 환경 카테고리 추가
-=======
-  { id: 4, name: '생활/문화' },
-  { id: 5, name: '세계' },
-  { id: 6, name: 'IT/과학' },
->>>>>>> bed1f6822658e1113a1fded44f53e3d04b81b764
+  { id: 8, name: '환경' },
 ];
 
 export default function NewsPage() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [lastUpdate, setLastUpdate] = useState<string>('');
+
+  // 카테고리명 반환 함수
+  const getCategoryName = (topicId: number): string => {
+    const category = categories.find(cat => cat.id === topicId);
+    return category ? category.name : '기타';
+  };
 
   // 뉴스 데이터 가져오기
   const fetchNews = async (categoryId?: number) => {
@@ -49,218 +49,168 @@ export default function NewsPage() {
         .from('news')
         .select('*')
         .order('published_at', { ascending: false })
-        .limit(50); // 최신 50개만
+        .limit(50);
 
+      // 카테고리 필터 적용
       if (categoryId) {
         query = query.eq('topic_id', categoryId);
       }
 
       const { data, error } = await query;
-
+      
       if (error) {
-        console.error('뉴스 가져오기 오류:', error);
+        console.error('뉴스 조회 오류:', error);
         return;
       }
-
-      // 데이터 변환 (카테고리명 매핑)
-      const transformedData = data?.map(item => ({
-        ...item,
-        topic: {
-          name: categories.find(c => c.id === item.topic_id)?.name || '기타'
-        }
-      })) || [];
-
-      setNews(transformedData);
-      setLastUpdate(new Date().toLocaleTimeString());
       
-      console.log(`${transformedData.length}개 뉴스 로드됨`);
-      
-      // 카테고리별 개수 로그
-      const categoryCount = {};
-      transformedData.forEach(item => {
-        categoryCount[item.topic_id] = (categoryCount[item.topic_id] || 0) + 1;
-      });
-      console.log('카테고리별 뉴스 개수:', categoryCount);
-
-    } catch (error) {
-      console.error('뉴스 로딩 중 오류:', error);
+      setNews(data || []);
+    } catch (err) {
+      console.error('데이터 가져오기 실패:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  // 페이지 로드 시 뉴스 가져오기
+  // 컴포넌트 마운트 시 실행
   useEffect(() => {
     fetchNews();
   }, []);
 
-  // 카테고리 변경 시 뉴스 다시 가져오기
+  // 카테고리 변경 핸들러
   const handleCategoryChange = (categoryId: number | null) => {
     setSelectedCategory(categoryId);
-    fetchNews(categoryId);
+    fetchNews(categoryId || undefined);
   };
 
-  // 수동 새로고침 함수
-  const handleRefresh = () => {
-    console.log('수동 새로고침 시작...');
-    fetchNews(selectedCategory);
+  // 날짜 포맷팅
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
-  // 자동 새로고침 (30초마다)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      console.log('자동 새로고침...');
-      fetchNews(selectedCategory);
-    }, 30000); // 30초
-
-    return () => clearInterval(interval);
-  }, [selectedCategory]);
-
-  if (loading && news.length === 0) {
-    return (
-      <div className="container mx-auto p-4">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-lg">뉴스를 불러오는 중...</div>
-        </div>
-      </div>
-    );
-  }
+  // 내용 미리보기 (150자로 제한)
+  const getPreview = (content: string) => {
+    return content.length > 150 ? content.substring(0, 150) + '...' : content;
+  };
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">📰 실시간 뉴스</h1>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">
-            마지막 업데이트: {lastUpdate}
-          </span>
-          <button
-            onClick={handleRefresh}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-            disabled={loading}
-          >
-            {loading ? '새로고침 중...' : '🔄 새로고침'}
-          </button>
-        </div>
-      </div>
-
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8 text-center">최신 뉴스</h1>
+      
       {/* 카테고리 필터 */}
-      <div className="mb-6">
-        <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap justify-center gap-2 mb-8">
+        <button
+          onClick={() => handleCategoryChange(null)}
+          className={`px-4 py-2 rounded-full transition-colors ${
+            selectedCategory === null 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+          }`}
+        >
+          전체
+        </button>
+        {categories.map(category => (
           <button
-            onClick={() => handleCategoryChange(null)}
+            key={category.id}
+            onClick={() => handleCategoryChange(category.id)}
             className={`px-4 py-2 rounded-full transition-colors ${
-              selectedCategory === null
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              selectedCategory === category.id 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
             }`}
           >
-            전체
+            {category.name}
           </button>
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => handleCategoryChange(category.id)}
-              className={`px-4 py-2 rounded-full transition-colors ${
-                selectedCategory === category.id
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              {category.name}
-            </button>
-          ))}
-        </div>
+        ))}
       </div>
 
-      {/* 뉴스 목록 */}
-      {news.length === 0 ? (
+      {/* 로딩 상태 */}
+      {loading && (
         <div className="text-center py-8">
-          <p className="text-gray-600">
-            {selectedCategory 
-              ? `${categories.find(c => c.id === selectedCategory)?.name} 카테고리에 뉴스가 없습니다.`
-              : '뉴스가 없습니다.'
-            }
-          </p>
-          <button
-            onClick={handleRefresh}
-            className="mt-4 px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-          >
-            다시 시도
-          </button>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="mt-2 text-gray-600">뉴스를 불러오는 중...</p>
         </div>
-      ) : (
-        <div className="grid gap-6">
-          {news.map((item) => (
-            <article key={item.news_id} className="border rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex flex-col md:flex-row gap-4">
-                {/* 이미지 */}
+      )}
+
+      {/* 뉴스 목록 */}
+      {!loading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {news.length === 0 ? (
+            <div className="col-span-full text-center py-8">
+              <p className="text-gray-600">뉴스가 없습니다.</p>
+            </div>
+          ) : (
+            news.map((item) => (
+              <article key={item.news_id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
+                {/* 뉴스 이미지 */}
                 {item.image_url && (
-                  <div className="md:w-64 flex-shrink-0">
+                  <div className="aspect-video relative overflow-hidden">
                     <img
                       src={item.image_url}
                       alt={item.title}
-                      className="w-full h-48 md:h-32 object-cover rounded"
+                      className="w-full h-full object-cover"
                       onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
+                        // 이미지 로드 실패 시 숨김
+                        (e.target as HTMLImageElement).style.display = 'none';
                       }}
                     />
                   </div>
                 )}
                 
-                {/* 내용 */}
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                      {item.topic.name}
+                <div className="p-4">
+                  {/* 카테고리 태그 */}
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                      {getCategoryName(item.topic_id)}
                     </span>
-                    <span className="text-sm text-gray-500">
-                      {new Date(item.published_at).toLocaleDateString('ko-KR', {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </span>
+                    <time className="text-xs text-gray-500">
+                      {formatDate(item.published_at)}
+                    </time>
                   </div>
-                  
-                  <h2 className="text-xl font-semibold mb-2 line-clamp-2">
-                    {item.title}
+
+                  {/* 뉴스 제목 */}
+                  <h2 className="text-lg font-semibold mb-2 line-clamp-2 hover:text-blue-600">
+                    <Link href={item.journal} target="_blank" rel="noopener noreferrer">
+                      {item.title}
+                    </Link>
                   </h2>
-                  
-                  <p className="text-gray-600 mb-3 line-clamp-3">
-                    {item.content.substring(0, 200)}...
+
+                  {/* 뉴스 내용 미리보기 */}
+                  <p className="text-gray-600 text-sm line-clamp-3 mb-3">
+                    {getPreview(item.content)}
                   </p>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">
-                      출처: 네이버 뉴스
-                    </span>
-                    {item.journal && (
-                      <a
-                        href={item.journal}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:text-blue-700 text-sm font-medium"
-                      >
-                        원문 보기 →
-                      </a>
-                    )}
-                  </div>
+
+                  {/* 읽기 링크 */}
+                  <Link 
+                    href={item.journal} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  >
+                    전문 보기
+                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </Link>
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            ))
+          )}
         </div>
       )}
 
-      {/* 로딩 표시 (추가 로딩 시) */}
-      {loading && news.length > 0 && (
-        <div className="text-center py-4">
-          <div className="text-gray-600">업데이트 중...</div>
-        </div>
-      )}
+      {/* 푸터 정보 */}
+      <div className="text-center mt-12 pt-8 border-t border-gray-200">
+        <p className="text-gray-500 text-sm">
+          뉴스 데이터는 네이버 뉴스에서 수집됩니다.
+        </p>
+      </div>
     </div>
   );
 }
