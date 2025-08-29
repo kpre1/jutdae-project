@@ -15,30 +15,55 @@ interface NewsItem {
   level: number;
 }
 
+interface QuizItem {
+  quiz_id: number;
+  question_type: string;
+  quiz_content: string;
+  option_data: string[] | null;  // 객관식일 경우
+  correct_answer: string;
+}
+
 export default function Level1Page() {
   const { topic } = useParams();
   const router = useRouter();
   const [news, setNews] = useState<NewsItem | null>(null);
+  const [quizzes, setQuizzes] = useState<QuizItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchNews = async () => {
-      const { data, error } = await supabase
+    const fetchData = async () => {
+      // ✅ 1. 뉴스 가져오기
+      const { data: newsData, error: newsError } = await supabase
         .from("news")
         .select("*")
-        .eq("level", 1)         // ✅ level 1 뉴스만 가져오기
-     // ✅ 선택한 토픽 필터
+        .eq("level", 1)
+        .eq("topic_slug", topic)
         .single();
 
-      if (error) {
-        console.error("뉴스 불러오기 오류:", error);
-      } else {
-        setNews(data);
+      if (newsError || !newsData) {
+        console.error("뉴스 불러오기 오류:", newsError);
+        setLoading(false);
+        return;
       }
+
+      setNews(newsData);
+
+      // ✅ 2. 해당 뉴스와 연결된 퀴즈 가져오기
+      const { data: quizData, error: quizError } = await supabase
+        .from("quiz")
+        .select("*")
+        .eq("news_id", newsData.news_id);
+
+      if (quizError) {
+        console.error("퀴즈 불러오기 오류:", quizError);
+      } else {
+        setQuizzes(quizData || []);
+      }
+
       setLoading(false);
     };
 
-    fetchNews();
+    fetchData();
   }, [topic]);
 
   const formatDate = (dateString: string) => {
@@ -56,7 +81,7 @@ export default function Level1Page() {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin h-8 w-8 border-4 border-gray-300 rounded-full border-t-blue-500"></div>
-        <span className="ml-3 text-gray-600">뉴스 불러오는 중...</span>
+        <span className="ml-3 text-gray-600">불러오는 중...</span>
       </div>
     );
   }
@@ -78,9 +103,9 @@ export default function Level1Page() {
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col gap-8">
           {/* 뉴스 섹션 */}
-          <article className="flex-1 bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
+          <article className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
             {news.image_url && (
               <img
                 src={news.image_url}
@@ -118,17 +143,39 @@ export default function Level1Page() {
             </div>
           </article>
 
-          {/* 글 작성 섹션 */}
-          <aside className="w-full lg:w-1/2 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <h2 className="text-2xl font-semibold mb-4">요약 작성하기</h2>
-            <textarea
-              placeholder="뉴스 요약, 의견, 태그 등을 작성하세요..."
-              className="w-full h-64 p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none mb-4"
-            />
-            <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-              작성 완료
-            </button>
-          </aside>
+          {/* 문제 섹션 */}
+          <section className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
+            <h2 className="text-2xl font-semibold mb-6">퀴즈</h2>
+            {quizzes.length === 0 ? (
+              <p className="text-gray-500">등록된 문제가 없습니다.</p>
+            ) : (
+              <ul className="space-y-6">
+                {quizzes.map((quiz) => (
+                  <li key={quiz.quiz_id} className="border-b pb-4">
+                    <p className="font-medium text-gray-800 mb-2">{quiz.quiz_content}</p>
+                    {quiz.option_data ? (
+                      <ul className="space-y-2">
+                        {quiz.option_data.map((opt, idx) => (
+                          <li key={idx}>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input type="radio" name={`quiz-${quiz.quiz_id}`} />
+                              <span>{opt}</span>
+                            </label>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="정답을 입력하세요"
+                        className="w-full p-2 border border-gray-300 rounded-lg"
+                      />
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         </div>
       </main>
     </div>
