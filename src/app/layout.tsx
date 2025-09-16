@@ -1,43 +1,39 @@
 'use client'
 
-import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
-import { Home, BookOpen } from "lucide-react";
+import { Home, BookOpen, Pen } from "lucide-react";
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [myPosts, setMyPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 현재 사용자 확인
-    const getUser = async () => {
+    const fetchUserAndPosts = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
+
+      if (user) {
+        const { data } = await supabase
+          .from('news')
+          .select('news_id, title')
+          .eq('author_email', user.email)
+          .order('published_at', { ascending: false });
+        setMyPosts(data || []);
+      }
+
       setLoading(false);
     };
+    fetchUserAndPosts();
 
-    getUser();
-
-    // 인증 상태 변경 리스너
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setUser(session?.user ?? null);
@@ -54,73 +50,68 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {/* 네비게이션 바 */}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased text-base sm:text-lg`}>
         <nav className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-4">
-              <div className="flex items-center space-x-4">
-                <Link href="/" className="text-2xl font-bold text-blue-600">
-                  줏대 있게 살아
-                </Link>
-              </div>
-              <div className="flex items-center space-x-4">
-                {loading ? (
-                  <div className="text-gray-500">로딩중...</div>
-                ) : user ? (
-                  // 로그인된 상태
-                  <>
-                    <span className="text-gray-700">
-                      안녕하세요, {user.user_metadata?.name || user.email}님!
-                    </span>
-                    <button
-                      onClick={handleLogout}
-                      className="text-gray-700 hover:text-blue-600"
-                    >
-                      로그아웃
-                    </button>
-                  </>
-                ) : (
-                  // 로그인되지 않은 상태
-                  <>
-                    <Link href="/login" className="text-gray-700 hover:text-blue-600">
-                      로그인
-                    </Link>
-                    <Link
-                      href="/register"
-                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                    >
-                      회원가입
-                    </Link>
-                  </>
-                )}
-              </div>
+          <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+            <div className="flex justify-between items-center py-5">
+              <Link href="/" className="text-2xl sm:text-3xl font-bold text-indigo-800">
+                줏대 있게 살아
+              </Link>
             </div>
           </div>
         </nav>
 
-        {/* 전체 레이아웃 */}
         <div className="flex">
           {/* 사이드바 */}
-          <aside className="w-64 bg-gradient-to-b from-gray-50 to-gray-100 h-screen p-6 border-r sticky top-0">
-            <nav className="space-y-2">
+          <aside className="w-72 sm:w-80 bg-gradient-to-b from-gray-50 to-gray-100 h-screen p-6 border-r sticky top-0 flex flex-col">
+             {/* 프로필 영역 (사이드바 맨 아래) */}
+            {user && (
+              <div className="text-center mt-auto">
+                <div className="w-20 h-20 mx-auto rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xl">
+                  {user.user_metadata?.name?.charAt(0) || user.email?.charAt(0)}
+                </div>
+                <p className="mt-2 font-medium text-gray-700">{user.user_metadata?.name || user.email}</p>
+                <p className="text-gray-500 text-sm">{user.email}</p>
+                <button
+                  onClick={handleLogout}
+                  className="mt-3 px-3 py-1 text-sm rounded border text-gray-700 hover:text-indigo-600"
+                >
+                  로그아웃
+                </button>
+              </div>
+            )}
+            
+            <div className="h-6"></div>
+            {/* 메뉴 영역 */} 
+           <nav className="space-y-3 flex-2">
               <Link
                 href="/"
-                className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-700 transition"
+                className="flex items-center space-x-3 px-3 py-3 rounded-lg text-gray-700 hover:bg-indigo-100 hover:text-indigo-800 transition"
               >
-                <Home size={18} />
-                <span>요약하기</span>
+                <Home size={20} />
+                <span className="font-medium">요약하기</span>
               </Link>
+
               <Link
                 href="/levelup"
-                className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-700 transition"
+                className="flex items-center space-x-3 px-3 py-3 rounded-lg text-gray-700 hover:bg-indigo-100 hover:text-indigo-800 transition"
               >
-                <BookOpen size={18} />
-                <span>레벨업 모드</span>
+                <BookOpen size={20} />
+                <span className="font-medium">레벨업 모드</span>
               </Link>
+
+               <Link
+                href="/levelup"
+                className="flex items-center space-x-3 px-3 py-3 rounded-lg text-gray-700 hover:bg-indigo-100 hover:text-indigo-800 transition"
+              >
+                <Pen size={20} />
+                <span className="font-medium">내가 쓴 글</span>
+              </Link>
+
+ 
             </nav>
+
+           
           </aside>
 
           {/* 본문 영역 */}
