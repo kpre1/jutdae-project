@@ -69,7 +69,7 @@ return (
   <div className="min-h-screen bg-[#F8F8FC] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
     <div className="sm:mx-auto sm:w-full sm:max-w-md">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900">줏대 있게 살아</h1>
+        <h1 className="text-3xl font-bold text-indigo-900">줏대 있게 살아</h1>
         <h2 className="mt-6 text-2xl font-bold text-[#1E0E62]">회원가입</h2>
         <p className="mt-2 text-sm text-gray-600">
           이미 계정이 있으신가요?{" "}
