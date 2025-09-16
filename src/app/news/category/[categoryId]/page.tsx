@@ -628,7 +628,7 @@ export default function NewsPage() {
           onClick={() => handleCategoryChange(null)}
           className={`px-4 py-2 rounded-full transition-colors ${
             selectedCategory === null 
-              ? 'bg-blue-600 text-white' 
+              ? 'bg-indigo-600 text-white' 
               : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
           }`}
         >
@@ -640,7 +640,7 @@ export default function NewsPage() {
             onClick={() => handleCategoryChange(category.id)}
             className={`px-4 py-2 rounded-full transition-colors ${
               selectedCategory === category.id 
-                ? 'bg-blue-600 text-white' 
+                ? 'bg-indigo-600 text-white' 
                 : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
             }`}
           >
@@ -710,7 +710,7 @@ export default function NewsPage() {
                       href={item.journal} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="flex-1 inline-flex items-center justify-center text-blue-600 hover:text-blue-800 text-sm font-medium border border-blue-200 hover:border-blue-300 rounded-lg py-2 px-3 transition-colors"
+                      className="flex-1 inline-flex items-center justify-center text-indigo-600 hover:text-blue-800 text-sm font-medium border border-blue-200 hover:border-blue-300 rounded-lg py-2 px-3 transition-colors"
                     >
                       전문 보기
                       <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
