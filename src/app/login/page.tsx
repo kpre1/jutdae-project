@@ -39,8 +39,8 @@ return (
   <div className="min-h-screen bg-[#F8F8FC] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
     <div className="sm:mx-auto sm:w-full sm:max-w-md">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900">줏대 있게 살아</h1>
-        <h2 className="mt-6 text-2xl font-bold text-gray-900">로그인</h2>
+        <h1 className="text-3xl font-bold text-indigo-900">줏대 있게 살아</h1>
+        <h2 className="mt-6 text-2xl font-semibold text-indigo-900">로그인</h2>
         <p className="mt-2 text-sm text-gray-600">
           계정이 없으신가요?{" "}
           <Link
@@ -126,10 +126,12 @@ return (
           </div>
 
           <div className="mt-6 text-center">
-            <Link href="/" className="text-blue-600 hover:text-blue-500 text-sm">
-              홈으로 돌아가기
+      
+             <Link href="/forgot-password" className="text-indigo-900 hover:text-blue-500 text-sm">
+              비밀번호 찾기
             </Link>
           </div>
+          
         </div>
       </div>
     </div>

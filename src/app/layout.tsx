@@ -50,8 +50,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased text-base sm:text-lg`}>
-       <nav className="bg-white shadow-sm border-b">
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased text-base sm:text-lg bg-white`}>
+    <nav className="bg-white shadow-sm border-b">
   <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
     <div className="flex justify-between items-center py-5">
       {/* 로고 */}
@@ -92,7 +92,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <div className="flex">
           {/* 사이드바 */}
-          <aside className="w-72 sm:w-80 bg-gradient-to-b from-gray-50 to-gray-100 h-screen p-6 border-r sticky top-0 flex flex-col">
+          <aside className="w-72 sm:w-80 bg-gradient-to-b from-white to-gray-100 h-screen p-6 border-r sticky top-0 flex flex-col">
              {/* 프로필 영역 (사이드바 맨 아래) */}
             {user && (
               <div className="text-center mt-auto">
