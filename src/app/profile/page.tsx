@@ -64,70 +64,55 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* 사이드바 */}
-      <div className="w-64 bg-white border-r border-gray-200 p-6">
-        <h2 className="text-lg font-medium mb-6">마이메뉴</h2>
-        <ul className="space-y-2 text-gray-700">
-          {['뉴스', '레벨업 하기', '내가 쓴 글'].map((menu) => (
-            <li key={menu} className="px-3 py-2 rounded hover:bg-gray-100 cursor-default">
-              {menu}
-            </li>
-          ))}
-        </ul>
+    <div className="min-h-screen bg-gray-50 p-8">
+      {/* 헤더 */}
+      <div className="text-center mb-12">
+        <h1 className="text-3xl font-medium text-gray-800">마이페이지</h1>
       </div>
 
-      {/* 메인 컨텐츠 */}
-      <div className="flex-1 p-8">
-        {/* 헤더 */}
-        <div className="text-center mb-12">
-          <h1 className="text-3xl font-medium text-gray-800">마이페이지</h1>
+      {/* 프로필 카드 */}
+      <div className="bg-white border border-gray-200 rounded-xl shadow p-6 text-center mb-10">
+        <div className="w-24 h-24 mx-auto rounded-full overflow-hidden bg-gray-200 mb-4">
+          <img
+            src={
+              user.user_metadata?.avatar_url ||
+              `https://api.dicebear.com/7.x/identicon/svg?seed=${user.id}`
+            }
+            alt="프로필"
+            className="w-full h-full object-cover"
+          />
         </div>
-
-        {/* 프로필 카드 */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow p-6 text-center mb-10">
-          <div className="w-24 h-24 mx-auto rounded-full overflow-hidden bg-gray-200 mb-4">
-            <img
-              src={
-                user.user_metadata?.avatar_url ||
-                `https://api.dicebear.com/7.x/identicon/svg?seed=${user.id}`
-              }
-              alt="프로필"
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="text-lg font-semibold text-gray-800 mb-1">
-            {user.user_metadata?.name || '이름 없음'}
-          </div>
-          <div className="text-sm text-gray-500 mb-2">{user.email}</div>
-          <div className="text-sm text-gray-500">
-            최근 로그인: {new Date(user.last_sign_in_at).toLocaleString()}
-          </div>
+        <div className="text-lg font-semibold text-gray-800 mb-1">
+          {user.user_metadata?.name || '이름 없음'}
         </div>
+        <div className="text-sm text-gray-500 mb-2">{user.email}</div>
+        <div className="text-sm text-gray-500">
+          최근 로그인: {new Date(user.last_sign_in_at).toLocaleString()}
+        </div>
+      </div>
 
-        {/* 카드 그리드 섹션 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-          {cards.map((card) => (
-            <div
-              key={card.title}
-              className={`bg-white border border-gray-200 rounded-xl shadow p-6 text-center cursor-pointer transform transition hover:-translate-y-1 ${
-                card.isDelete ? 'text-red-500' : ''
-              }`}
-              onClick={card.isDelete ? handleAccountDelete : undefined}
-            >
-              <div className="text-gray-800 font-medium mb-1">{card.title}</div>
-              {card.subtitle && <div className="text-gray-500 text-sm mb-2">{card.subtitle}</div>}
-              <div className={`text-sm ${card.isDelete ? 'text-red-500' : 'text-gray-500'}`}>
-                {card.content}
-              </div>
+      {/* 카드 그리드 섹션 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        {cards.map((card) => (
+          <div
+            key={card.title}
+            className={`bg-white border border-gray-200 rounded-xl shadow p-6 text-center cursor-pointer transform transition hover:-translate-y-1 ${
+              card.isDelete ? 'text-red-500' : ''
+            }`}
+            onClick={card.isDelete ? handleAccountDelete : undefined}
+          >
+            <div className="text-gray-800 font-medium mb-1">{card.title}</div>
+            {card.subtitle && <div className="text-gray-500 text-sm mb-2">{card.subtitle}</div>}
+            <div className={`text-sm ${card.isDelete ? 'text-red-500' : 'text-gray-500'}`}>
+              {card.content}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
+      </div>
 
-        {/* 푸터 */}
-        <div className="text-center text-gray-400 text-sm py-10">
-          © 2025 마이페이지
-        </div>
+      {/* 푸터 */}
+      <div className="text-center text-gray-400 text-sm py-10">
+        © 줏대 있게 살아
       </div>
     </div>
   );

@@ -130,11 +130,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </Link>
 
                <Link
-                href="/levelup"
+                href="/my-posts"
                 className="flex items-center space-x-3 px-3 py-3 rounded-lg text-gray-700 hover:bg-indigo-100 hover:text-indigo-800 transition"
               >
                 <Pen size={20} />
                 <span className="font-medium">내가 쓴 글</span>
+              </Link>
+            
+              <Link
+               href="/profile"
+               className="flex items-center space-x-3 px-3 py-3 rounded-lg text-gray-700 hover:bg-indigo-100 hover:text-indigo-800 transition"
+              >
+               <span className="font-medium">마이페이지</span>
               </Link>
 
  
