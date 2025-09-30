@@ -169,7 +169,7 @@ export default function MyPostsPage() {
     }
   };
 
-  // 게시글 삭제
+// 게시글 삭제
   const deletePost = async (summaryId: number) => {
     if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
       return;
