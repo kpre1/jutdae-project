@@ -451,21 +451,12 @@ export default function MyPostsPage() {
                       </div>
                     )}
 
-                    {/* 게시글 푸터 */}
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <ThumbsUp className="w-4 h-4" />
-                          <span>{post.likes_count || 0}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <MessageCircle className="w-4 h-4" />
-                          <span>{post.comments_count || 0}</span>
-                        </div>
-                      </div>
+  
 
 
-                    </div>
+
+
+                  
                   </article>
                 ))}
               </div>

@@ -18,7 +18,26 @@ interface NewsItem {
   };
 }
 
-// 카테고리 매핑 (데이터베이스 구조와 일치)
+interface UserPost {
+  summary_id: number;
+  user_summary: string;
+  created_at: string;
+  user_table: {
+    name: string;
+    nickname: string;
+  } | null;
+  likes_count: number;
+  is_liked: boolean;
+  feedback_stats?: Record<number, number>;
+}
+
+interface FeedbackOption {
+  id: number;
+  content: string;
+  emoji: string;
+}
+
+// 카테고리 매핑
 const categories = [
   { id: 1, name: '정치' },
   { id: 2, name: '경제' },
@@ -76,7 +95,6 @@ export default function NewsPage() {
         .order('published_at', { ascending: false })
         .limit(50);
 
-      // 카테고리 필터 적용
       if (categoryId) {
         query = query.eq('topic_id', categoryId);
       }
@@ -113,21 +131,20 @@ export default function NewsPage() {
     setUserSummary('');
     setShowCommunityPosts(false);
     setPostsLoaded(false);
-    setCommunityPosts([]); // 새 뉴스 선택 시 게시글 초기화
+    setCommunityPosts([]);
   };
 
   // 게시글 보기 버튼 클릭 핸들러
   const handleShowCommunityPosts = async () => {
     setShowCommunityPosts(true);
     
-    // 이미 로드했으면 다시 로드하지 않음
     if (postsLoaded) return;
     
     setLoadingPosts(true);
     
     try {
-      // 실제 데이터베이스에서 해당 뉴스의 요약글들 가져오기
-      const { data: summaries, error } = await supabase
+      // 1. 요약글 가져오기
+      const { data: summaries, error: summaryError } = await supabase
         .from('summary')
         .select(`
           summary_id,
@@ -141,59 +158,92 @@ export default function NewsPage() {
         .eq('news_id', selectedNews!.news_id)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('요약글 조회 오류:', error);
+      if (summaryError) {
+        console.error('요약글 조회 오류:', summaryError);
+        setCommunityPosts([]);
+        setPostsLoaded(true);
+        setLoadingPosts(false);
+        return;
       }
-      
-      // 실제 데이터가 있으면 사용, 없으면 샘플 데이터 표시
-      if (summaries && summaries.length > 0) {
-        const posts: UserPost[] = summaries.map(summary => ({
-          summary_id: summary.summary_id,
-          user_summary: summary.user_summary,
-          created_at: summary.created_at,
-          user_table: summary.user_table,
-          likes_count: Math.floor(Math.random() * 20),
-          is_liked: Math.random() > 0.7
-        }));
-        setCommunityPosts(posts);
-      } else {
-        // 실제 데이터가 없으면 샘플 데이터 표시 (개발/테스트용)
-        setCommunityPosts(generateSamplePosts());
+
+      if (!summaries || summaries.length === 0) {
+        setCommunityPosts([]);
+        setPostsLoaded(true);
+        setLoadingPosts(false);
+        return;
       }
+
+      // 2. 모든 summary_id 배열로 만들기
+      const summaryIds = summaries.map(s => s.summary_id);
+
+      // 3. 좋아요 수 한 번에 가져오기
+      const { data: allLikes } = await supabase
+        .from('summary_likes')
+        .select('summary_id, user_id')
+        .in('summary_id', summaryIds);
+
+      // 4. 피드백 한 번에 가져오기
+      const { data: allFeedbacks } = await supabase
+        .from('feedback')
+        .select('summary_id, option_id')
+        .in('summary_id', summaryIds);
+
+      // 5. summary_id별로 좋아요 수 계산
+      const likesCountMap: Record<number, number> = {};
+      const userLikesMap: Record<number, boolean> = {};
       
+      allLikes?.forEach(like => {
+        likesCountMap[like.summary_id] = (likesCountMap[like.summary_id] || 0) + 1;
+        if (user && like.user_id === user.id) {
+          userLikesMap[like.summary_id] = true;
+        }
+      });
+
+      // 6. summary_id별로 피드백 통계 계산
+      const feedbackStatsMap: Record<number, Record<number, number>> = {};
+      
+      allFeedbacks?.forEach(feedback => {
+        if (!feedbackStatsMap[feedback.summary_id]) {
+          feedbackStatsMap[feedback.summary_id] = {};
+        }
+        const optionId = feedback.option_id;
+        feedbackStatsMap[feedback.summary_id][optionId] = 
+          (feedbackStatsMap[feedback.summary_id][optionId] || 0) + 1;
+      });
+
+      // 7. 데이터 합치기
+      const postsWithStats: UserPost[] = summaries.map(summary => ({
+        summary_id: summary.summary_id,
+        user_summary: summary.user_summary,
+        created_at: summary.created_at,
+        user_table: summary.user_table,
+        likes_count: likesCountMap[summary.summary_id] || 0,
+        is_liked: userLikesMap[summary.summary_id] || false,
+        feedback_stats: feedbackStatsMap[summary.summary_id] || {}
+      }));
+
+      setCommunityPosts(postsWithStats);
       setPostsLoaded(true);
     } catch (error) {
       console.error('요약글 가져오기 실패:', error);
-      setCommunityPosts(generateSamplePosts());
+      setCommunityPosts([]);
       setPostsLoaded(true);
     }
     
     setLoadingPosts(false);
   };
 
-  // 샘플 데이터 생성 함수 (실제 데이터가 없을 때만 사용)
-  const generateSamplePosts = (): UserPost[] => [
-    {
-      summary_id: 1,
-      user_summary: `"${selectedNews!.title.substring(0, 30)}..." 기사 요약:\n\n이 ${getCategoryName(selectedNews!.topic_id)} 뉴스의 핵심은 다음과 같습니다:\n\n1. 주요 발표 내용과 배경\n2. 이해관계자들의 반응\n3. 예상되는 사회적 파급효과\n\n특히 이번 이슈가 우리 일상에 미칠 직접적인 영향을 고려할 때, 지속적인 관찰이 필요할 것 같습니다.`,
-      created_at: '2025-09-01T10:30:00Z',
-      user_table: { name: '김○○', nickname: 'user1' },
-      likes_count: 12,
-      is_liked: false
-    },
-    {
-      summary_id: 2,
-      user_summary: `이 기사를 읽고 느낀 점:\n\n기사에서 가장 중요한 부분은 구체적인 수치와 데이터였습니다. 언론에서 제시한 통계를 바탕으로 현 상황을 객관적으로 파악할 수 있었고, 향후 전망도 어느 정도 예측 가능합니다.\n\n다만 기사에서 다루지 않은 다른 관점들도 있을 것 같아서, 추가적인 정보 수집이 필요할 것 같네요.`,
-      created_at: '2025-09-01T09:15:00Z',
-      user_table: { name: '이○○', nickname: 'user2' },
-      likes_count: 8,
-      is_liked: true
-    }
-  ];
-
   // 좋아요 토글
   const toggleLike = async (summaryId: number) => {
-    // 먼저 UI 상태 업데이트 (즉시 반응)
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    const currentPost = communityPosts.find(p => p.summary_id === summaryId);
+    const wasLiked = currentPost?.is_liked || false;
+
+    // UI 즉시 업데이트
     setCommunityPosts(prevPosts => 
       prevPosts.map(post => 
         post.summary_id === summaryId 
@@ -206,50 +256,65 @@ export default function NewsPage() {
       )
     );
     
-    // 실제 데이터베이스에도 반영 (summary_likes 테이블 필요)
-    // try {
-    //   const { data: existingLike } = await supabase
-    //     .from('summary_likes')
-    //     .select('*')
-    //     .eq('summary_id', summaryId)
-    //     .eq('user_id', currentUserId)
-    //     .single();
-    //   
-    //   if (existingLike) {
-    //     // 좋아요 취소
-    //     await supabase
-    //       .from('summary_likes')
-    //       .delete()
-    //       .eq('summary_id', summaryId)
-    //       .eq('user_id', currentUserId);
-    //   } else {
-    //     // 좋아요 추가
-    //     await supabase
-    //       .from('summary_likes')
-    //       .insert({ summary_id: summaryId, user_id: currentUserId });
-    //   }
-    // } catch (error) {
-    //   console.error('좋아요 처리 실패:', error);
-    // }
+    try {
+      if (wasLiked) {
+        // 좋아요 취소
+        const { error } = await supabase
+          .from('summary_likes')
+          .delete()
+          .eq('summary_id', summaryId)
+          .eq('user_id', user.id);
+        
+        if (error) throw error;
+      } else {
+        // 좋아요 추가
+        const { error } = await supabase
+          .from('summary_likes')
+          .insert({ 
+            summary_id: summaryId, 
+            user_id: user.id 
+          });
+        
+        if (error) throw error;
+      }
+    } catch (error: any) {
+      console.error('좋아요 처리 실패:', error);
+      
+      // 실패 시 UI 롤백
+      setCommunityPosts(prevPosts => 
+        prevPosts.map(post => 
+          post.summary_id === summaryId 
+            ? { 
+                ...post, 
+                is_liked: wasLiked,
+                likes_count: wasLiked 
+                  ? post.likes_count + 1 
+                  : post.likes_count - 1
+              }
+            : post
+        )
+      );
+      
+      alert('좋아요 처리에 실패했습니다: ' + error.message);
+    }
   };
 
   // 피드백 제출
-  const submitFeedback = async (summaryId: number, feedbackId: number) => {
+  const submitFeedback = async (summaryId: number, feedbackOptionId: number) => {
     if (!user) {
       alert('로그인이 필요합니다.');
       return;
     }
     
-    const feedback = feedbackOptions.find(f => f.id === feedbackId);
+    const option = feedbackOptions.find(f => f.id === feedbackOptionId);
     
     try {
-      // 실제 feedback 테이블에 저장
       const { error } = await supabase
         .from('feedback')
         .insert({
-          option_id: feedbackId,
+          option_id: feedbackOptionId,
           summary_id: summaryId,
-          user_id: user.id // 실제 로그인된 사용자 ID
+          user_id: user.id
         });
       
       if (error) {
@@ -258,7 +323,11 @@ export default function NewsPage() {
         return;
       }
       
-      alert(`"${feedback?.emoji} ${feedback?.content}" 피드백을 보냈습니다!`);
+      alert(`"${option?.emoji} ${option?.content}" 피드백을 보냈습니다!`);
+      
+      // 피드백 후 통계 새로고침
+      setPostsLoaded(false);
+      await handleShowCommunityPosts();
     } catch (error) {
       console.error('피드백 처리 실패:', error);
       alert('피드백 전송에 실패했습니다.');
@@ -275,7 +344,7 @@ export default function NewsPage() {
     }
     
     try {
-      // 1. 먼저 user_table에 사용자가 있는지 확인
+      // 1. user_table 확인 및 생성
       const { data: existingUser, error: userCheckError } = await supabase
         .from('user_table')
         .select('user_id')
@@ -283,7 +352,6 @@ export default function NewsPage() {
         .single();
 
       if (userCheckError && userCheckError.code === 'PGRST116') {
-        // 사용자가 user_table에 없으면 생성
         const { error: insertUserError } = await supabase
           .from('user_table')
           .insert({
@@ -301,30 +369,22 @@ export default function NewsPage() {
         }
       }
 
-       // 2. summary 테이블에 저장
-      const { data, error } = await supabase
+      // 2. summary 저장
+      const { error } = await supabase
         .from('summary')
         .insert({
           user_summary: userSummary,
           news_id: selectedNews!.news_id,
           user_id: user.id
-        })
-        .select(`
-          summary_id,
-          user_summary,
-          created_at
-         `);
+        });
 
-      
       if (error) {
         console.error('DB 저장 오류:', error);
         alert('저장에 실패했습니다: ' + error.message);
         return;
       }
 
-      // 저장 성공 시 게시글 목록 새로고침을 위해 postsLoaded 리셋
       setPostsLoaded(false);
-      
       alert('요약이 저장되었습니다!');
       setUserSummary('');
     } catch (error) {
@@ -352,9 +412,81 @@ export default function NewsPage() {
     });
   };
 
-  // 내용 미리보기 (150자로 제한)
+  // 내용 미리보기
   const getPreview = (content: string) => {
     return content.length > 150 ? content.substring(0, 150) + '...' : content;
+  };
+
+  // 통계 대시보드 컴포넌트
+  const StatsOverview = () => {
+    const totalLikes = communityPosts.reduce((sum, post) => sum + post.likes_count, 0);
+    const totalFeedbacks = communityPosts.reduce((sum, post) => {
+      const feedbackCount = Object.values(post.feedback_stats || {})
+        .reduce((a, b) => a + b, 0);
+      return sum + feedbackCount;
+    }, 0);
+
+    const mostLikedPost = communityPosts.length > 0 
+      ? communityPosts.reduce((prev, current) => 
+          (current.likes_count > prev.likes_count) ? current : prev
+        )
+      : null;
+
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h3 className="text-lg font-semibold mb-4">📊 이 기사의 통계</h3>
+        
+        <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="text-center p-3 bg-blue-50 rounded-lg">
+            <div className="text-2xl font-bold text-blue-600">{communityPosts.length}</div>
+            <div className="text-sm text-gray-600">총 요약글</div>
+          </div>
+          <div className="text-center p-3 bg-red-50 rounded-lg">
+            <div className="text-2xl font-bold text-red-600">{totalLikes}</div>
+            <div className="text-sm text-gray-600">총 좋아요</div>
+          </div>
+          <div className="text-center p-3 bg-green-50 rounded-lg">
+            <div className="text-2xl font-bold text-green-600">{totalFeedbacks}</div>
+            <div className="text-sm text-gray-600">총 피드백</div>
+          </div>
+        </div>
+
+        {/* 피드백 분포 */}
+        <div className="mb-4">
+          <h4 className="text-sm font-medium mb-2 text-gray-700">피드백 분포</h4>
+          <div className="flex gap-2 flex-wrap">
+            {feedbackOptions.map(option => {
+              const count = communityPosts.reduce((sum, post) => 
+                sum + (post.feedback_stats?.[option.id] || 0), 0
+              );
+              if (count === 0) return null;
+              return (
+                <div key={option.id} className="flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-full text-sm">
+                  <span>{option.emoji}</span>
+                  <span className="font-medium">{count}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 인기 요약글 */}
+        {mostLikedPost && mostLikedPost.likes_count > 0 && (
+          <div className="pt-4 border-t">
+            <h4 className="text-sm font-medium mb-2 text-gray-700">🏆 가장 인기있는 요약</h4>
+            <div className="bg-yellow-50 p-3 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="font-medium">{mostLikedPost.user_table?.name}</span>
+                <span className="text-red-500 text-sm">❤️ {mostLikedPost.likes_count}</span>
+              </div>
+              <p className="text-sm text-gray-700 line-clamp-2">
+                {mostLikedPost.user_summary}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   // 요약 화면이 열려있으면 해당 화면 렌더링
@@ -534,6 +666,9 @@ export default function NewsPage() {
                 </div>
               </div>
 
+              {/* 통계 대시보드 */}
+              {communityPosts.length > 0 && <StatsOverview />}
+
               {/* 게시글 목록 */}
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">이 기사에 대한 다른 사용자들의 요약 ({communityPosts.length})</h3>
@@ -552,61 +687,61 @@ export default function NewsPage() {
                 ) : (
                   <>
                     {communityPosts.map((post) => (
-                    <div key={post.id} className="bg-white rounded-lg shadow-md p-6">
-                      {/* 사용자 정보 */}
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-sm font-medium text-blue-600">
-                            {post.user_table?.nickname?.charAt(0).toUpperCase() || '?'}
-                          </div>
-                          <div>
-                            <p className="font-medium">{post.user_table?.name || '익명'}</p>
-                            <p className="text-sm text-gray-500">@{post.user_table?.nickname || 'unknown'} • {formatDate(post.created_at)}</p>
+                      <div key={post.summary_id} className="bg-white rounded-lg shadow-md p-6">
+                        {/* 사용자 정보 */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-sm font-medium text-blue-600">
+                              {post.user_table?.nickname?.charAt(0).toUpperCase() || '?'}
+                            </div>
+                            <div>
+                              <p className="font-medium">{post.user_table?.name || '익명'}</p>
+                              <p className="text-sm text-gray-500">@{post.user_table?.nickname || 'unknown'} • {formatDate(post.created_at)}</p>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      {/* 요약 내용 */}
-                      <div className="mb-4">
-                        <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                          {post.user_summary}
-                        </p>
-                      </div>
-
-                      {/* 상호작용 버튼들 */}
-                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                        <div className="flex items-center gap-4">
-                          <button
-                            onClick={() => toggleLike(post.summary_id)}
-                            className={`flex items-center gap-2 px-3 py-1 rounded-full transition-colors ${
-                              post.is_liked 
-                                ? 'bg-red-100 text-red-600' 
-                                : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-                            }`}
-                          >
-                            <svg className="w-4 h-4" fill={post.is_liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                            </svg>
-                            <span className="text-sm font-medium">{post.likes_count}</span>
-                          </button>
+                        {/* 요약 내용 */}
+                        <div className="mb-4">
+                          <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                            {post.user_summary}
+                          </p>
                         </div>
 
-                        {/* 피드백 옵션들 */}
-                        <div className="flex gap-2">
-                          {feedbackOptions.map(option => (
+                        {/* 상호작용 버튼들 */}
+                        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                          <div className="flex items-center gap-4">
                             <button
-                              key={option.id}
-                              onClick={() => submitFeedback(post.summary_id, option.id)}
-                              className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-1"
-                              title={option.content}
+                              onClick={() => toggleLike(post.summary_id)}
+                              className={`flex items-center gap-2 px-3 py-1 rounded-full transition-colors ${
+                                post.is_liked 
+                                  ? 'bg-red-100 text-red-600' 
+                                  : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                              }`}
                             >
-                              <span>{option.emoji}</span>
+                              <svg className="w-4 h-4" fill={post.is_liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                              </svg>
+                              <span className="text-sm font-medium">{post.likes_count}</span>
                             </button>
-                          ))}
+                          </div>
+
+                          {/* 피드백 옵션들 */}
+                          <div className="flex gap-2">
+                            {feedbackOptions.map(option => (
+                              <button
+                                key={option.id}
+                                onClick={() => submitFeedback(post.summary_id, option.id)}
+                                className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-1"
+                                title={option.content}
+                              >
+                                <span>{option.emoji}</span>
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                                      ))}
+                    ))}
                   </>
                 )}
               </div>
