@@ -494,22 +494,7 @@ export default function NewsPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         {/* 헤더 */}
-        <div className="bg-white shadow-sm border-b">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-xl font-bold">뉴스 상세 + 요약 화면</h1>
-              <button
-                onClick={closeSummaryView}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                목록으로 돌아가기
-              </button>
-            </div>
-          </div>
-        </div>
+       
 
         {/* 메인 컨텐츠 */}
         <div className="container mx-auto px-4 py-6">
