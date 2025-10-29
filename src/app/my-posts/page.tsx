@@ -170,32 +170,25 @@ export default function MyPostsPage() {
   };
 
 // 게시글 삭제
-  const deletePost = async (summaryId: number) => {
-    if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
-      return;
-    }
+ const deletePost = async (summaryId: number) => {
+  if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) return;
 
-    try {
-      const { error } = await supabase
-        .from('summary')
-        .delete()
-        .eq('summary_id', summaryId)
-        .eq('user_id', user!.id); // 본인 글만 삭제 가능
+  try {
+    const { error } = await supabase
+      .from('summary')
+      .delete()
+      .eq('summary_id', summaryId); // ✅ 핵심 수정 부분
 
-      if (error) {
-        console.error('삭제 오류:', error);
-        alert('삭제에 실패했습니다.');
-        return;
-      }
+    if (error) throw error;
 
-      // 성공 시 목록에서 제거
-      setPosts(prevPosts => prevPosts.filter(post => post.summary_id !== summaryId));
-      alert('게시글이 삭제되었습니다.');
-    } catch (error) {
-      console.error('삭제 실패:', error);
-      alert('삭제에 실패했습니다.');
-    }
-  };
+    setPosts(prevPosts => prevPosts.filter(p => p.summary_id !== summaryId));
+    alert('게시글이 삭제되었습니다.');
+  } catch (error) {
+    console.error('삭제 실패:', error);
+    alert('삭제에 실패했습니다.');
+  }
+};
+
 
   // 게시글 수정 시작
   const startEditing = (post: MyPost) => {
