@@ -122,7 +122,7 @@ export default function NewsPage() {
 
   // 피드백 옵션들
   const feedbackOptions: FeedbackOption[] = [
-    //  { id: 1, content: '좋아요', emoji: '👍' },
+    //  { id: 1, content: '좋아요', emoji: '👍' },
     { id: 2, content: '별로예요', emoji: '👎' },
     { id: 3, content: '보완이 필요해요', emoji: '💡' },
     { id: 4, content: '완벽해요', emoji: '✨' },
@@ -212,14 +212,14 @@ export default function NewsPage() {
       const { data: summaries, error: summaryError } = await supabase
         .from('summary')
         .select(`
-          summary_id,
-          user_summary,
-          created_at,
-          user_table (
-            name,
-            nickname
-          )
-        `)
+          summary_id,
+          user_summary,
+          created_at,
+          user_table (
+            name,
+            nickname
+          )
+        `)
         .eq('news_id', selectedNews!.news_id)
         .order('created_at', { ascending: false });
 
@@ -366,8 +366,8 @@ export default function NewsPage() {
     }
   };
 
-  // 피드백 제출
-  const submitFeedback = async (summaryId: number, optionId: number) => {
+ // ✅ 피드백 제출 (최적화된 토글 및 통계 즉시 반영)
+const submitFeedback = async (summaryId: number, optionId: number) => {
     if (!user) {
       alert('로그인이 필요합니다.');
       return;
@@ -375,50 +375,74 @@ export default function NewsPage() {
 
     const selectedOptions = userFeedbacks[summaryId] || [];
     const alreadySelected = selectedOptions.includes(optionId);
+    
+    // 💡 1. 변경될 클라이언트 상태 미리 계산: 토글 로직
+    const isTogglingOff = alreadySelected;
+    const newSelectedOptions = isTogglingOff
+        ? selectedOptions.filter(id => id !== optionId) 
+        : [...selectedOptions, optionId];
+
+    // 2. UI (선택 버튼 색상) 및 사용자 피드백 상태 즉시 업데이트 (낙관적 업데이트)
+    setUserFeedbacks(prev => ({
+        ...prev,
+        [summaryId]: newSelectedOptions
+    }));
+
+    // 3. communityPosts의 피드백 통계 (feedback_stats) 즉시 업데이트
+    //    (DB 재조회 대신 이 로직으로 통계 +1/-1 처리)
+    const updatedPosts = communityPosts.map(post => {
+        if (post.summary_id === summaryId) {
+            const newStats = { ...post.feedback_stats };
+            const currentCount = newStats[optionId] || 0;
+
+            if (isTogglingOff) {
+                // 선택 취소: 통계 -1
+                newStats[optionId] = Math.max(0, currentCount - 1);
+                if (newStats[optionId] === 0) delete newStats[optionId]; 
+            } else {
+                // 선택 추가: 통계 +1
+                newStats[optionId] = currentCount + 1;
+            }
+            
+            return { ...post, feedback_stats: newStats };
+        }
+        return post;
+    });
+
+    setCommunityPosts(updatedPosts); // <-- 통계가 이 시점에 즉시 업데이트됩니다.
 
     try {
-      if (alreadySelected) {
-        // 선택 취소
-        const { error } = await supabase
-          .from('feedback')
-          .delete()
-          .eq('summary_id', summaryId)
-          .eq('option_id', optionId)
-          .eq('user_id', user.id);
+        // 4. DB 업데이트 (실제 데이터 반영)
+        if (isTogglingOff) {
+            // 선택 취소 (DB DELETE)
+            const { error } = await supabase
+                .from('feedback')
+                .delete()
+                .eq('summary_id', summaryId)
+                .eq('option_id', optionId)
+                .eq('user_id', user.id);
+            if (error) throw error;
+        } else {
+            // 선택 추가 (DB INSERT)
+            const { error } = await supabase
+                .from('feedback')
+                .insert({
+                    summary_id: summaryId,
+                    option_id: optionId,
+                    user_id: user.id
+                });
+            if (error) throw error;
+        }
+        // DB 업데이트 성공! 별도의 재로딩이 필요 없습니다.
 
-        if (error) throw error;
-
-        setUserFeedbacks(prev => ({
-          ...prev,
-          [summaryId]: prev[summaryId].filter(id => id !== optionId)
-        }));
-      } else {
-        // 선택 추가
-        const { error } = await supabase
-          .from('feedback')
-          .insert({
-            summary_id: summaryId,
-            option_id: optionId,
-            user_id: user.id
-          });
-
-        if (error) throw error;
-
-        setUserFeedbacks(prev => ({
-          ...prev,
-          [summaryId]: [...(prev[summaryId] || []), optionId]
-        }));
-      }
-
-      // 선택 상태 업데이트 후 통계 새로고침
-      setPostsLoaded(false);
-      await handleShowCommunityPosts();
     } catch (error: any) {
-      console.error('피드백 처리 실패:', error);
-      alert('피드백 처리 실패: ' + error.message);
+        console.error('피드백 처리 실패:', error);
+        alert('피드백 처리 실패: ' + error.message);
+        // DB 실패 시 롤백: 전체 게시글을 다시 불러와 상태를 되돌립니다.
+        setPostsLoaded(false);
+        await handleShowCommunityPosts(); 
     }
-  };
-
+};
 
   // 사용자 요약 저장
   const saveUserSummary = async () => {
@@ -849,21 +873,30 @@ export default function NewsPage() {
                               피드백 주기
                             </button>
 
+                            {/* ✅ 피드백 UI 개선 (선택 개수 표시) */}
                             {feedbackVisible[post.summary_id] && (
                               <div className="absolute z-10 mt-2 min-w-[200px] max-w-sm p-3 bg-white rounded-lg shadow-lg flex flex-col gap-2 right-0">
                                 {feedbackOptions.map(option => {
                                   const selected = userFeedbacks[post.summary_id]?.includes(option.id);
+                                  const count = post.feedback_stats?.[option.id] || 0;
                                   return (
                                     <button
                                       key={option.id}
                                       onClick={() => submitFeedback(post.summary_id, option.id)}
-                                      className={`px-3 py-2 rounded-lg transition-colors text-left font-medium ${
+                                      className={`px-3 py-2 rounded-lg transition-colors text-left font-medium flex items-center justify-between ${
                                         selected
                                           ? 'bg-indigo-500 text-white'
                                           : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                                         }`}
                                     >
-                                      {option.emoji} {option.content}
+                                      <span>{option.emoji} {option.content}</span>
+                                      {count > 0 && (
+                                        <span className={`text-xs ml-2 px-2 py-0.5 rounded-full ${
+                                          selected ? 'bg-indigo-400' : 'bg-gray-300'
+                                        }`}>
+                                          {count}
+                                        </span>
+                                      )}
                                     </button>
                                   );
                                 })}
@@ -1012,4 +1045,3 @@ export default function NewsPage() {
     </div>
   );
 }
-
