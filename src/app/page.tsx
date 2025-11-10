@@ -140,11 +140,12 @@ export default function Home() {
                       {new Date(news.published_at).toLocaleDateString()}
                     </span>
                     <Link
-                      href={`/news/${news.news_id}`}
+                      href={`/news/category/${news.topic_id}`}
                       className="text-indigo-600 hover:underline"
                     >
                       자세히 보기
                     </Link>
+
                   </div>
                 </div>
               </div>
