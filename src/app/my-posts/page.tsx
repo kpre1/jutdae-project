@@ -190,6 +190,9 @@ export default function MyPostsPage() {
     if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
       return;
     }
+// 게시글 삭제
+ const deletePost = async (summaryId: number) => {
+  if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) return;
 
     try {
       const { error } = await supabase
@@ -211,6 +214,22 @@ export default function MyPostsPage() {
       alert('삭제에 실패했습니다.');
     }
   };
+  try {
+    const { error } = await supabase
+      .from('summary')
+      .delete()
+      .eq('summary_id', summaryId); // ✅ 핵심 수정 부분
+
+    if (error) throw error;
+
+    setPosts(prevPosts => prevPosts.filter(p => p.summary_id !== summaryId));
+    alert('게시글이 삭제되었습니다.');
+  } catch (error) {
+    console.error('삭제 실패:', error);
+    alert('삭제에 실패했습니다.');
+  }
+};
+
 
   const startEditing = (post: MyPost) => {
     setEditingPost(post.summary_id);
