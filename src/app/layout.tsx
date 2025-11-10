@@ -50,7 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en">
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased text-base sm:text-lg bg-white`}>
+        <body className={`antialiased text-base sm:text-lg bg-white`}>
     <nav className="bg-white shadow-sm border-b">
   <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
     <div className="flex justify-between items-center py-5">
