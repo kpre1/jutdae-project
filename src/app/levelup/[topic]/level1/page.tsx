@@ -12,6 +12,7 @@ interface NewsItem {
   link: string | null;
   topic_id: number | null;
   level_id: number | null;
+  
 }
 
 interface QuizItem {
@@ -27,6 +28,8 @@ interface QuizItem {
 export default function Level1Page() {
   const { topic } = useParams();
   const router = useRouter();
+  const [levelId, setLevelId] = useState<number | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [news, setNews] = useState<NewsItem | null>(null);
   const [quizzes, setQuizzes] = useState<QuizItem[]>([]);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -35,8 +38,15 @@ export default function Level1Page() {
 
   useEffect(() => {
     if (!topic) return;
+    const fetchUser = async () => {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error) console.error("유저 조회 실패", error);
+    else setCurrentUser(user);
+      };
+      fetchUser();
 
     const fetchData = async () => {
+      
       try {
         // 1️⃣ topic_id 가져오기
         const { data: topicData, error: topicError } = await supabase
@@ -91,6 +101,10 @@ export default function Level1Page() {
         const selectedNews = newsData[0];
         setNews(selectedNews);
 
+        const fetchedLevelId = levelData.level_id;
+        setLevelId(fetchedLevelId);
+
+
     // 4️⃣ 퀴즈 조회 (news_id 기준)
 const { data: quizData, error: quizError } = await supabase
   .from("quiz")
@@ -110,6 +124,8 @@ if (quizError) {
 });
 setQuizzes(parsedQuizzes);
 
+
+
 }
 
 
@@ -121,23 +137,118 @@ setQuizzes(parsedQuizzes);
       }
     };
 
+
+
     fetchData();
   }, [topic]);
+  
 
   const handleAnswerChange = (quizId: number, value: string) => {
     setAnswers((prev) => ({ ...prev, [quizId]: value }));
   };
 
-  const handleSubmit = () => {
-    const newResults: Record<number, boolean> = {};
-    quizzes.forEach((quiz) => {
-      const userAnswer = (answers[quiz.quiz_id] || "").trim();
-      const correct = quiz.correct_answer.trim();
-      newResults[quiz.quiz_id] =
-        userAnswer.toLowerCase() === correct.toLowerCase();
-    });
-    setResults(newResults);
-  };
+const handleSubmit = async () => {
+  const newResults: Record<number, boolean> = {};
+  quizzes.forEach((quiz) => {
+    const userAnswer = (answers[quiz.quiz_id] || "").trim();
+    const correct = quiz.correct_answer.trim();
+    newResults[quiz.quiz_id] = userAnswer.toLowerCase() === correct.toLowerCase();
+  });
+  setResults(newResults);
+
+  const allCorrect = Object.values(newResults).every(Boolean);
+
+  if (!currentUser) {
+    console.warn("저장 실패: 로그인된 유저가 없습니다.");
+    return;
+  }
+  if (!levelId) {
+    console.warn("저장 실패: levelId가 없습니다.");
+    return;
+  }
+
+  if (allCorrect) {
+    try {
+      // ✅ 1) 기존 챌린지 데이터 확인
+      const { data: existing, error: existErr } = await supabase
+        .from("challenge")
+        .select("*")
+        .eq("user_id", currentUser.id)
+        .eq("level_id", levelId)
+        .maybeSingle();
+
+      if (existErr) {
+        console.error("챌린지 조회 중 오류:", existErr);
+        return;
+      }
+
+      if (existing) {
+        // ✅ 이미 클리어한 경우 업데이트
+        await supabase
+          .from("challenge")
+          .update({
+            is_cleared: true,
+            cleared_at: new Date().toISOString(),
+          })
+          .eq("challenge_id", existing.challenge_id);
+      } else {
+        // ✅ 처음 클리어 시 삽입
+        await supabase.from("challenge").insert({
+          user_id: currentUser.id,
+          level_id: levelId,
+          is_cleared: true,
+          cleared_at: new Date().toISOString(),
+        });
+      }
+
+      // ✅ 2) 다음 레벨 찾기 (difficulty 기준)
+      const { data: currentLevel } = await supabase
+        .from("level")
+        .select("difficulty, topic_id")
+        .eq("level_id", levelId)
+        .maybeSingle();
+
+      if (!currentLevel) {
+        console.warn("현재 레벨 정보를 찾을 수 없습니다.");
+        return;
+      }
+
+      const nextDiff = currentLevel.difficulty + 1;
+
+      // ✅ 3) 다음 레벨 조회
+      const { data: nextLevelData, error: nextErr } = await supabase
+        .from("level")
+        .select("level_id")
+        .eq("topic_id", currentLevel.topic_id)
+        .eq("difficulty", nextDiff)
+        .maybeSingle();
+
+      if (nextErr) {
+        console.error("다음 레벨 조회 오류:", nextErr);
+        return;
+      }
+
+      // ✅ 4) 다음 레벨 존재 여부 확인
+      if (nextLevelData?.level_id) {
+        alert(`🎯 ${nextDiff}단계로 이동합니다!`);
+        router.push(`/levelup/${topic}/level${nextDiff}`);
+      } else {
+        alert("🎉 모든 레벨을 클리어했습니다! 축하합니다!");
+      }
+    } catch (e) {
+      console.error("챌린지 저장 중 예외:", e);
+    }
+  } else {
+    alert("❌ 일부 문제를 틀렸습니다. 다시 시도해보세요!");
+  }
+};
+
+
+
+
+  const allCorrect = Object.values(results).every(Boolean);
+  
+
 
   if (loading) {
     return (
