@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { User } from '@supabase/supabase-js';
-import { Calendar, Eye, ThumbsUp, MessageCircle, Trash2, Edit } from 'lucide-react';
+import { Calendar, Eye, ThumbsUp, MessageCircle, Trash2, Edit, MessageSquare } from 'lucide-react';
 
 interface MyPost {
   summary_id: number;
@@ -14,6 +14,7 @@ interface MyPost {
   news: {
     news_id: number;
     title: string;
+    content?: string; // 반론 생성에 필요
     image_url: string | null;
     topic_id: number;
   };
@@ -56,6 +57,10 @@ export default function MyPostsPage() {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [editingPost, setEditingPost] = useState<number | null>(null);
   const [editContent, setEditContent] = useState('');
+  
+  // AI 반론 관련 state
+  const [aiRebuttals, setAiRebuttals] = useState<Record<number, string>>({});
+  const [loadingRebuttal, setLoadingRebuttal] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     const fetchUserAndPosts = async () => {
@@ -87,6 +92,7 @@ export default function MyPostsPage() {
           news (
             news_id,
             title,
+            content,
             image_url,
             topic_id
           )
@@ -275,6 +281,44 @@ export default function MyPostsPage() {
   const cancelEdit = () => {
     setEditingPost(null);
     setEditContent('');
+  };
+
+  // ✅ AI 반론 생성 함수
+  const generateRebuttal = async (post: MyPost) => {
+    if (!post.news?.content) {
+      alert('기사 원문을 불러올 수 없습니다.');
+      return;
+    }
+
+    setLoadingRebuttal(prev => ({ ...prev, [post.summary_id]: true }));
+
+    try {
+      const response = await fetch('/api/aiRebuttal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          articleTitle: post.news.title,
+          articleContent: post.news.content,
+          userSummary: post.user_summary,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'AI 반론 생성 실패');
+      }
+
+      setAiRebuttals(prev => ({
+        ...prev,
+        [post.summary_id]: data.rebuttal
+      }));
+    } catch (error: any) {
+      console.error('AI 반론 생성 오류:', error);
+      alert('AI 반론 생성 중 오류가 발생했습니다: ' + error.message);
+    } finally {
+      setLoadingRebuttal(prev => ({ ...prev, [post.summary_id]: false }));
+    }
   };
 
   if (!user) {
@@ -564,6 +608,49 @@ export default function MyPostsPage() {
                         </p>
                       </div>
                     )}
+
+                    {/* ✅ AI 반론 섹션 */}
+                    <div className="mb-4">
+                      {!aiRebuttals[post.summary_id] ? (
+                        <button
+                          onClick={() => generateRebuttal(post)}
+                          disabled={loadingRebuttal[post.summary_id]}
+                          className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white text-sm rounded-lg transition-colors"
+                        >
+                          {loadingRebuttal[post.summary_id] ? (
+                            <>
+                              <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              <span>AI 반론 생성 중...</span>
+                            </>
+                          ) : (
+                            <>
+                              <MessageSquare className="w-4 h-4" />
+                              <span>AI 반론하기</span>
+                            </>
+                          )}
+                        </button>
+                      ) : (
+                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <MessageSquare className="w-4 h-4 text-purple-600" />
+                            <h4 className="text-sm font-medium text-purple-800">AI의 반론 및 보완점:</h4>
+                          </div>
+                          <p className="text-gray-700 leading-relaxed text-sm whitespace-pre-line">
+                            {aiRebuttals[post.summary_id]}
+                          </p>
+                          <button
+                            onClick={() => setAiRebuttals(prev => {
+                              const newState = { ...prev };
+                              delete newState[post.summary_id];
+                              return newState;
+                            })}
+                            className="mt-2 text-xs text-purple-600 hover:text-purple-800 underline"
+                          >
+                            닫기
+                          </button>
+                        </div>
+                      )}
+                    </div>
 
                     {/* 좋아요 및 피드백 통계 */}
                     <div className="pt-4 border-t border-gray-100">
