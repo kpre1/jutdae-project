@@ -42,10 +42,22 @@ export default function ProfilePage() {
         console.error('유저 정보 불러오기 오류:', error.message);
         return;
       }
-      if (data?.user) {
-        setUser(data.user);
-        setEditName(data.user.user_metadata?.name || '');
-      }
+     if (data?.user) {
+  // User → UserProfile 변환
+  const userProfile: UserProfile = {
+    id: data.user.id,
+    email: data.user.email || '',
+    user_metadata: {
+      name: data.user.user_metadata?.name,
+      avatar_url: data.user.user_metadata?.avatar_url,
+    },
+    last_sign_in_at: data.user.last_sign_in_at || '',
+  };
+
+  setUser(userProfile);
+  setEditName(userProfile.user_metadata?.name || '');
+}
+
     };
     getUser();
   }, []);
