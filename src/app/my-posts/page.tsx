@@ -11,6 +11,7 @@ interface MyPost {
   user_summary: string;
   ai_summary: string | null;
   created_at: string;
+  
   news: {
     news_id: number;
     title: string;
@@ -28,6 +29,8 @@ interface FeedbackOption {
   content: string;
   emoji: string;
 }
+
+
 
 const categories = [
   { id: 1, name: '정치' },
@@ -109,8 +112,8 @@ export default function MyPostsPage() {
 
       let filteredData = data || [];
       if (selectedCategory) {
-        filteredData = filteredData.filter(post => 
-          post.news?.topic_id === selectedCategory
+        filteredData = filteredData.filter((post: any) => 
+          post?.news?.topic_id === selectedCategory
         );
       }
 
