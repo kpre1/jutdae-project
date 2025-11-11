@@ -18,7 +18,7 @@ interface MyPost {
     content?: string; // 반론 생성에 필요
     image_url: string | null;
     topic_id: number;
-  };
+  }[];
   likes_count?: number;
   feedback_stats?: Record<number, number>;
   total_feedbacks?: number;
