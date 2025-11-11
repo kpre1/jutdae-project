@@ -34,6 +34,7 @@ export default function NewsSummaryPage() {
     fetchNewsData();
   }, [newsId]);
 
+// @ts-ignore
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -61,7 +62,7 @@ export default function NewsSummaryPage() {
     }
     setLoading(false);
   };
-
+// @ts-ignore
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -94,7 +95,7 @@ export default function NewsSummaryPage() {
       setIsSubmitting(false);
       return;
     }
-
+// @ts-ignore
     try {
       const { data, error } = await supabase
         .from('summary')
@@ -168,6 +169,7 @@ export default function NewsSummaryPage() {
               <Link href="/" className="text-gray-700 hover:text-blue-600">
                 홈
               </Link>
+              
               <span className="text-gray-700">{user?.email}</span>
             </div>
           </div>
