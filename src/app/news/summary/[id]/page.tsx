@@ -34,13 +34,14 @@ export default function NewsSummaryPage() {
     fetchNewsData();
   }, [newsId]);
 
-// @ts-ignore
+
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       router.push('/login');
       return;
     }
+    // @ts-ignore
     setUser(user);
   };
 
@@ -74,7 +75,7 @@ export default function NewsSummaryPage() {
     else if (diffDays < 7) return `${diffDays}일 전`;
     else return date.toLocaleDateString('ko-KR');
   };
-
+// @ts-ignore
   const getCategoryName = (categoryId) => {
     const category = categories.find(cat => cat.id === categoryId);
     return category ? category.name : '기타';
@@ -95,7 +96,7 @@ export default function NewsSummaryPage() {
       setIsSubmitting(false);
       return;
     }
-// @ts-ignore
+
     try {
       const { data, error } = await supabase
         .from('summary')
@@ -103,8 +104,10 @@ export default function NewsSummaryPage() {
           {
             title: summaryTitle,
             content: summaryContent,
+            // @ts-ignore
             news_id: parseInt(newsId),
             topic_id: parseInt(categoryId),
+            // @ts-ignore
             user_id: user.id,
           },
         ])
@@ -194,6 +197,7 @@ export default function NewsSummaryPage() {
                 )}
               </div>
               <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                
                 {newsData?.title || '뉴스 제목'}
               </h1>
               <div className="flex items-center space-x-4 text-sm text-gray-500">
@@ -216,6 +220,7 @@ export default function NewsSummaryPage() {
             </div>
             
             <div className="p-6">
+              
               {newsData?.image_url && (
                 <img
                   src={newsData.image_url}
