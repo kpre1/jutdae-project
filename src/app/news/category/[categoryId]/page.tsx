@@ -659,7 +659,7 @@ const saveUserSummary = async () => {
        
 
         {/* 메인 컨텐츠 */}
-        <div className="container mx-auto px-4 py-6 bg-gradient-to-r from-indigo-50">
+        <div className="container mx-auto px-4 py-6 bg-gradient-to-r from-indigo-30">
           <div className="mb-6 flex justify-between items-center">
             <button
               onClick={closeSummaryView}

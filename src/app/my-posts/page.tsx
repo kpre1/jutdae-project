@@ -18,7 +18,7 @@ interface MyPost {
     content?: string; // 반론 생성에 필요
     image_url: string | null;
     topic_id: number;
-  }[];
+  }| null;
   likes_count?: number;
   feedback_stats?: Record<number, number>;
   total_feedbacks?: number;
@@ -113,8 +113,9 @@ export default function MyPostsPage() {
       let filteredData = data || [];
       if (selectedCategory) {
         filteredData = filteredData.filter((post: any) => 
-          post?.news?.topic_id === selectedCategory
-        );
+  post?.news?.[0]?.topic_id === selectedCategory
+);
+
       }
 
 // 각 게시글의 좋아요와 피드백 통계 가져오기
@@ -156,8 +157,6 @@ const postsWithStats = await Promise.all(
   })
 );
 
-// ✅ 여기 추가
-setPosts(postsWithStats);
 
 } catch (error) {
   console.error('내 글 조회 오류:', error);
@@ -205,9 +204,7 @@ setPosts(postsWithStats);
     if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
       return;
     }
-// 게시글 삭제
- const deletePost = async (summaryId: number) => {
-  if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) return;
+
 
     try {
       const { error } = await supabase
@@ -227,7 +224,7 @@ setPosts(postsWithStats);
     } catch (error) {
       console.error('삭제 실패:', error);
       alert('삭제에 실패했습니다.');
-    }
+    
   };
   try {
     const { error } = await supabase
@@ -294,7 +291,9 @@ setPosts(postsWithStats);
 
   // ✅ AI 반론 생성 함수
   const generateRebuttal = async (post: MyPost) => {
-    if (!post.news?.content) {
+     const newsItem = post.news;
+
+    if (!newsItem?.content) {
       alert('기사 원문을 불러올 수 없습니다.');
       return;
     }
@@ -306,9 +305,9 @@ setPosts(postsWithStats);
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          articleTitle: post.news.title,
-          articleContent: post.news.content,
-          userSummary: post.user_summary,
+        articleTitle: newsItem.title,        // ✅ 수정
+        articleContent: newsItem.content,    // ✅ 수정
+        userSummary: post.user_summary,
         }),
       });
 
@@ -433,6 +432,7 @@ setPosts(postsWithStats);
                       <div className="flex items-center gap-2 mb-2">
                         <span className="font-medium text-gray-900">
                           {mostLikedPost.news?.title}
+
                         </span>
                       </div>
                       <div className="flex items-center gap-3 text-sm text-gray-600 mb-2">
