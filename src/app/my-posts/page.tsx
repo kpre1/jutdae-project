@@ -114,44 +114,56 @@ export default function MyPostsPage() {
         );
       }
 
-      // 각 게시글의 좋아요와 피드백 통계 가져오기
-      const postsWithStats = await Promise.all(
-        filteredData.map(async (post) => {
-          // 좋아요 수 조회
-          let likesCount = 0;
-          try {
-            const { count } = await supabase
-              .from('summary_likes')
-              .select('*', { count: 'exact', head: true })
-              .eq('summary_id', post.summary_id);
-            likesCount = count || 0;
-          } catch (e) {
-            console.log('좋아요 테이블 없음');
-          }
+// 각 게시글의 좋아요와 피드백 통계 가져오기
+const postsWithStats = await Promise.all(
+  filteredData.map(async (post) => {
+    // 좋아요 수 조회
+    let likesCount = 0;
+    try {
+      const { count } = await supabase
+        .from('summary_likes')
+        .select('*', { count: 'exact', head: true })
+        .eq('summary_id', post.summary_id);
+      likesCount = count || 0;
+    } catch (e) {
+      console.log('좋아요 테이블 없음');
+    } 
+  
+    // 피드백 통계 조회
+    const { data: feedbacks } = await supabase
+      .from('feedback')
+      .select('option_id')
+      .eq('summary_id', post.summary_id);
 
-          // 피드백 통계 조회
-          const { data: feedbacks } = await supabase
-            .from('feedback')
-            .select('option_id')
-            .eq('summary_id', post.summary_id);
+    const feedbackStats: Record<number, number> = {};
+    let totalFeedbacks = 0;
+    
+    feedbacks?.forEach(feedback => {
+      feedbackStats[feedback.option_id] = 
+        (feedbackStats[feedback.option_id] || 0) + 1;
+      totalFeedbacks++;
+    });
 
-          const feedbackStats: Record<number, number> = {};
-          let totalFeedbacks = 0;
-          
-          feedbacks?.forEach(feedback => {
-            feedbackStats[feedback.option_id] = 
-              (feedbackStats[feedback.option_id] || 0) + 1;
-            totalFeedbacks++;
-          });
+    return {
+      ...post,
+      likes_count: likesCount,
+      feedback_stats: feedbackStats,
+      total_feedbacks: totalFeedbacks
+    };
+  })
+);
 
-          return {
-            ...post,
-            likes_count: likesCount,
-            feedback_stats: feedbackStats,
-            total_feedbacks: totalFeedbacks
-          };
-        })
-      );
+// ✅ 여기 추가
+setPosts(postsWithStats);
+
+} catch (error) {
+  console.error('내 글 조회 오류:', error);
+} finally {
+  setLoading(false);
+}
+}; // ✅ fetchMyPosts 함수 닫기
+
+      
 
      
 
@@ -693,5 +705,6 @@ export default function MyPostsPage() {
         )}
       </div>
     </div>
-  );
+  
+);
 }
