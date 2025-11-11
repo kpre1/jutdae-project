@@ -280,11 +280,13 @@ const getRandomEmoji = (summaryId: number) => {
       
 
       // 7. 데이터 합치기
+
+      // @ts-ignore
       const postsWithStats: UserPost[] = summaries.map(summary => ({
         summary_id: summary.summary_id,
         user_summary: summary.user_summary,
         created_at: summary.created_at,
-        user_table: summary.user_table,
+        user_table: summary.user_table[0],
         likes_count: likesCountMap[summary.summary_id] || 0,
         is_liked: userLikesMap[summary.summary_id] || false,
         feedback_stats: feedbackStatsMap[summary.summary_id] || {}
