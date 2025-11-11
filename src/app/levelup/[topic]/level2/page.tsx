@@ -274,7 +274,7 @@ const handleSubmit = async () => {
   }
 
 return (
-  <div className="min-h-screen bg-gray-50">
+  <div className="min-h-screen bg-white">
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="flex flex-col lg:flex-row gap-8">
         {/* 뉴스 */}
@@ -367,7 +367,7 @@ return (
               {/* 제출 버튼 */}
               <button
                 onClick={handleSubmit}
-                className="mt-6 w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition"
+                className="mt-6 w-full bg-indigo-400 text-white py-3 rounded-xl hover:bg-blue-700 transition"
               >
                 제출하기
               </button>

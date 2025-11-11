@@ -107,7 +107,7 @@ export default function ProfilePage() {
     ];
 
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="min-h-screen  bg-gradient-to-b from-white to-indigo-50 rounded-xl p-8">
         <div className="text-center mb-12">
           <h1 className="text-3xl font-medium text-gray-800">마이페이지</h1>
         </div>
@@ -150,7 +150,7 @@ export default function ProfilePage() {
   // ===== 프로필 수정 =====
   if (currentView === 'profile') {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="min-h-screen bg-gradient-to-b from-white to-indigo-50 rounded-xl p-8">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-2xl font-medium text-gray-800">프로필 수정</h1>
@@ -177,7 +177,7 @@ export default function ProfilePage() {
                 type="email"
                 value={user.email}
                 disabled
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg  text-gray-500"
               />
               <p className="text-xs text-gray-500 mt-1">이메일은 변경할 수 없습니다</p>
             </div>
@@ -228,7 +228,7 @@ export default function ProfilePage() {
   // ===== 환경설정 =====
   if (currentView === 'settings') {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="min-h-screen  bg-gradient-to-b from-white to-indigo-50 rounded-xl p-8">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-2xl font-medium text-gray-800">환경설정</h1>
@@ -264,7 +264,7 @@ export default function ProfilePage() {
   // ===== 고객센터 =====
   if (currentView === 'support') {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="min-h-screen bg-gradient-to-b from-white to-indigo-50 rounded-xl p-8">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-2xl font-medium text-gray-800">고객 센터</h1>
@@ -357,7 +357,7 @@ export default function ProfilePage() {
   // ===== 계정 탈퇴 =====
   if (currentView === 'delete') {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="min-h-screen bg-gradient-to-b from-white to-indigo-50 rounded-xl p-8">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-2xl font-medium text-red-600">계정 탈퇴</h1>

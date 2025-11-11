@@ -51,10 +51,10 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 px-6 py-12">
+    <main className="min-h-screen rounded-3xl  bg-gradient-to-b from-white to-indigo-50 rounded-xl p-5">
       {/* 헤더 */}
       <div className="max-w-5xl mx-auto text-center mb-16">
-        <h1 className="text-5xl font-extrabold text-indigo-900 mb-4">
+        <h1 className="text-5xl font-extrabold text-indigo-900 mb-4 p-10">
           줏대 있게 살아
         </h1>
         <p className="text-lg text-gray-600">

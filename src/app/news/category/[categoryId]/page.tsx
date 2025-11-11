@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -43,7 +44,7 @@ const categories = [
   { id: 1, name: '정치' },
   { id: 2, name: '경제' },
   { id: 3, name: '사회' },
-  { id: 4, name: '생활/문화' },
+  { id: 4, name: '생활/문화' }, 
   { id: 5, name: 'IT/과학' },
   { id: 6, name: '스포츠' },
   { id: 7, name: '국제' },
@@ -59,7 +60,7 @@ interface AiSummaryBoxProps {
 
 const AiSummaryBox: React.FC<AiSummaryBoxProps> = ({ aiSummary, loadingAiSummary, onGenerate }) => {
   return (
-    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+    <div className="bg-blue-50 border-blue-200 rounded-lg p-4 mb-4">
       <h4 className="flex items-center gap-2 text-md font-semibold text-blue-800 mb-3">
         🤖 AI 요약 (Auto-Generated Summary)
       </h4>
@@ -81,7 +82,7 @@ const AiSummaryBox: React.FC<AiSummaryBoxProps> = ({ aiSummary, loadingAiSummary
           <button
             onClick={onGenerate}
             disabled={loadingAiSummary}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium rounded-lg transition-colors text-sm"
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-300 disabled:bg-blue-300 text-white font-medium rounded-lg transition-colors text-sm"
           >
             AI 요약 생성하기
           </button>
@@ -106,7 +107,7 @@ export default function NewsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [feedbackVisible, setFeedbackVisible] = useState<Record<number, boolean>>({});
   // summary_id별 선택된 옵션 관리
-  const [userFeedbacks, setUserFeedbacks] = useState<Record<number, number[]>>({});
+const [userFeedbacks, setUserFeedbacks] = useState<Record<number, number[]>>({});
 
   // ✅ AI 요약 관련 state
   const [aiSummary, setAiSummary] = useState('');
@@ -122,7 +123,7 @@ export default function NewsPage() {
 
   // 피드백 옵션들
   const feedbackOptions: FeedbackOption[] = [
-    //  { id: 1, content: '좋아요', emoji: '👍' },
+    //  { id: 1, content: '좋아요', emoji: '👍' },
     { id: 2, content: '별로예요', emoji: '👎' },
     { id: 3, content: '보완이 필요해요', emoji: '💡' },
     { id: 4, content: '완벽해요', emoji: '✨' },
@@ -140,7 +141,7 @@ export default function NewsPage() {
   const fetchNews = async (categoryId?: number) => {
     try {
       setLoading(true);
-
+      
       let query = supabase
         .from('news')
         .select('*')
@@ -152,12 +153,12 @@ export default function NewsPage() {
       }
 
       const { data, error } = await query;
-
+      
       if (error) {
         console.error('뉴스 조회 오류:', error);
         return;
       }
-
+      
       setNews(data || []);
     } catch (err) {
       console.error('데이터 가져오기 실패:', err);
@@ -177,6 +178,7 @@ export default function NewsPage() {
     fetchNews(categoryId || undefined);
   };
 
+  // 요약하기 버튼 클릭 핸들러
   const handleSummarizeClick = (newsItem: NewsItem) => {
     setSelectedNews(newsItem);
     setUserSummary('');
@@ -184,29 +186,29 @@ export default function NewsPage() {
     setPostsLoaded(false);
     setCommunityPosts([]);
     setAiSummary(''); // AI 요약 초기화
-  };
+  }; 
 
 
   const generateAnonymousName = (summaryId: number) => {
-    const randomNum = Math.floor(Math.random() * 9000) + 1000; // 1000~9999
-    return `익명${randomNum}`;
-  };
+  const randomNum = Math.floor(Math.random() * 9000) + 1000; // 1000~9999
+  return `익명${randomNum}`;
+};
 
   const emojis = ['😎', '🤓', '🥳', '🤖', '👻', '🐶', '🐱', '🦊', '🦄', '🐼'];
 
-  const getRandomEmoji = (summaryId: number) => {
-    return emojis[summaryId % emojis.length]; // summaryId 기준으로 고정
-  };
+const getRandomEmoji = (summaryId: number) => {
+  return emojis[summaryId % emojis.length]; // summaryId 기준으로 고정
+};
 
 
   // 게시글 보기 버튼 클릭 핸들러
   const handleShowCommunityPosts = async () => {
     setShowCommunityPosts(true);
-
+    
     if (postsLoaded) return;
-
+    
     setLoadingPosts(true);
-
+    
     try {
       // 1. 요약글 가져오기
       const { data: summaries, error: summaryError } = await supabase
@@ -256,7 +258,7 @@ export default function NewsPage() {
       // 5. summary_id별로 좋아요 수 계산
       const likesCountMap: Record<number, number> = {};
       const userLikesMap: Record<number, boolean> = {};
-
+      
       allLikes?.forEach(like => {
         likesCountMap[like.summary_id] = (likesCountMap[like.summary_id] || 0) + 1;
         if (user && like.user_id === user.id) {
@@ -266,16 +268,16 @@ export default function NewsPage() {
 
       // 6. summary_id별로 피드백 통계 계산
       const feedbackStatsMap: Record<number, Record<number, number>> = {};
-
+      
       allFeedbacks?.forEach(feedback => {
         if (!feedbackStatsMap[feedback.summary_id]) {
           feedbackStatsMap[feedback.summary_id] = {};
         }
         const optionId = feedback.option_id;
-        feedbackStatsMap[feedback.summary_id][optionId] =
+        feedbackStatsMap[feedback.summary_id][optionId] = 
           (feedbackStatsMap[feedback.summary_id][optionId] || 0) + 1;
       });
-
+      
 
       // 7. 데이터 합치기
       const postsWithStats: UserPost[] = summaries.map(summary => ({
@@ -295,8 +297,8 @@ export default function NewsPage() {
       setCommunityPosts([]);
       setPostsLoaded(true);
     }
-
-
+    
+    
     setLoadingPosts(false);
   };
 
@@ -311,18 +313,18 @@ export default function NewsPage() {
     const wasLiked = currentPost?.is_liked || false;
 
     // UI 즉시 업데이트
-    setCommunityPosts(prevPosts =>
-      prevPosts.map(post =>
-        post.summary_id === summaryId
-          ? {
-            ...post,
-            is_liked: !post.is_liked,
-            likes_count: post.is_liked ? post.likes_count - 1 : post.likes_count + 1
-          }
+    setCommunityPosts(prevPosts => 
+      prevPosts.map(post => 
+        post.summary_id === summaryId 
+          ? { 
+              ...post, 
+              is_liked: !post.is_liked,
+              likes_count: post.is_liked ? post.likes_count - 1 : post.likes_count + 1
+            }
           : post
       )
     );
-
+    
     try {
       if (wasLiked) {
         // 좋아요 취소
@@ -331,51 +333,51 @@ export default function NewsPage() {
           .delete()
           .eq('summary_id', summaryId)
           .eq('user_id', user.id);
-
+        
         if (error) throw error;
       } else {
         // 좋아요 추가
         const { error } = await supabase
           .from('summary_likes')
-          .insert({
-            summary_id: summaryId,
-            user_id: user.id
+          .insert({ 
+            summary_id: summaryId, 
+            user_id: user.id 
           });
-
+        
         if (error) throw error;
       }
     } catch (error: any) {
       console.error('좋아요 처리 실패:', error);
-
+      
       // 실패 시 UI 롤백
-      setCommunityPosts(prevPosts =>
-        prevPosts.map(post =>
-          post.summary_id === summaryId
-            ? {
-              ...post,
-              is_liked: wasLiked,
-              likes_count: wasLiked
-                ? post.likes_count + 1
-                : post.likes_count - 1
-            }
+      setCommunityPosts(prevPosts => 
+        prevPosts.map(post => 
+          post.summary_id === summaryId 
+            ? { 
+                ...post, 
+                is_liked: wasLiked,
+                likes_count: wasLiked 
+                  ? post.likes_count + 1 
+                  : post.likes_count - 1
+              }
             : post
         )
       );
-
+      
       alert('좋아요 처리에 실패했습니다: ' + error.message);
     }
   };
 
  // ✅ 피드백 제출 (최적화된 토글 및 통계 즉시 반영)
 const submitFeedback = async (summaryId: number, optionId: number) => {
-    if (!user) {
-      alert('로그인이 필요합니다.');
-      return;
-    }
+  if (!user) {
+    alert('로그인이 필요합니다.');
+    return;
+  }
 
-    const selectedOptions = userFeedbacks[summaryId] || [];
-    const alreadySelected = selectedOptions.includes(optionId);
-    
+  const selectedOptions = userFeedbacks[summaryId] || [];
+  const alreadySelected = selectedOptions.includes(optionId);
+
     // 💡 1. 변경될 클라이언트 상태 미리 계산: 토글 로직
     const isTogglingOff = alreadySelected;
     const newSelectedOptions = isTogglingOff
@@ -415,98 +417,115 @@ const submitFeedback = async (summaryId: number, optionId: number) => {
         // 4. DB 업데이트 (실제 데이터 반영)
         if (isTogglingOff) {
             // 선택 취소 (DB DELETE)
-            const { error } = await supabase
-                .from('feedback')
-                .delete()
-                .eq('summary_id', summaryId)
-                .eq('option_id', optionId)
-                .eq('user_id', user.id);
-            if (error) throw error;
-        } else {
-            // 선택 추가 (DB INSERT)
-            const { error } = await supabase
-                .from('feedback')
-                .insert({
-                    summary_id: summaryId,
-                    option_id: optionId,
-                    user_id: user.id
-                });
-            if (error) throw error;
-        }
-        // DB 업데이트 성공! 별도의 재로딩이 필요 없습니다.
-
-    } catch (error: any) {
-        console.error('피드백 처리 실패:', error);
-        alert('피드백 처리 실패: ' + error.message);
-        // DB 실패 시 롤백: 전체 게시글을 다시 불러와 상태를 되돌립니다.
-        setPostsLoaded(false);
-        await handleShowCommunityPosts(); 
-    }
-};
-
-  // 사용자 요약 저장
-  const saveUserSummary = async () => {
-    if (!userSummary.trim()) return;
-
-    if (!user) {
-      alert('로그인이 필요합니다.');
-      return;
-    }
-
-    try {
-      // 1. user_table 존재 확인
-      const { data: existingUser, error: userCheckError } = await supabase
-        .from('user_table')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .single();
-
-      // 1-1. 사용자 미존재 시 생성
-      if (userCheckError && userCheckError.code === 'PGRST116') {
-        const { error: insertUserError } = await supabase
-          .from('user_table')
-          .insert({
-            user_id: user.id,
-            email: user.email || '',
-            name: user.email?.split('@')[0] || '사용자',
-            nickname: user.email?.split('@')[0] || 'user',
-            email_verified: user.email_confirmed_at !== null
-          });
-
-        if (insertUserError) {
-          console.error('사용자 생성 오류:', insertUserError);
-          alert('사용자 정보 생성에 실패했습니다: ' + insertUserError.message);
-          return;
-        }
-      }
-
-      // 2. summary 저장
       const { error } = await supabase
-        .from('summary')
+        .from('feedback')
+        .delete()
+        .eq('summary_id', summaryId)
+        .eq('option_id', optionId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setUserFeedbacks(prev => ({
+        ...prev,
+        [summaryId]: prev[summaryId].filter(id => id !== optionId)
+      }));
+    } else {
+            // 선택 추가 (DB INSERT)
+      const { error } = await supabase
+        .from('feedback')
         .insert({
-          user_summary: userSummary,
-          news_id: selectedNews!.news_id,
+          summary_id: summaryId,
+          option_id: optionId,
           user_id: user.id
         });
 
-      if (error) {
-        console.error('DB 저장 오류:', error);
-        alert('요약 저장에 실패했습니다: ' + error.message);
+      if (error) throw error;
+
+      setUserFeedbacks(prev => ({
+        ...prev,
+        [summaryId]: [...(prev[summaryId] || []), optionId]
+      }));
+    }
+        // DB 업데이트 성공! 별도의 재로딩이 필요 없습니다.
+
+    // 선택 상태 업데이트 후 통계 새로고침
+    setPostsLoaded(false);
+    await handleShowCommunityPosts();
+  } catch (error: any) {
+    console.error('피드백 처리 실패:', error);
+    alert('피드백 처리 실패: ' + error.message);
+        // DB 실패 시 롤백: 전체 게시글을 다시 불러와 상태를 되돌립니다.
+        setPostsLoaded(false);
+        await handleShowCommunityPosts(); 
+  }
+};
+
+
+
+// 사용자 요약 저장
+const saveUserSummary = async () => {
+  if (!userSummary.trim()) return;
+
+  if (!user) {
+    alert('로그인이 필요합니다.');
+    return;
+  }
+
+  try {
+    // 1. user_table 존재 확인
+    const { data: existingUser, error: userCheckError } = await supabase
+      .from('user_table')
+      .select('user_id')
+      .eq('user_id', user.id)
+      .single();
+
+    // 1-1. 사용자 미존재 시 생성
+    if (userCheckError && userCheckError.code === 'PGRST116') {
+      const { error: insertUserError } = await supabase
+        .from('user_table')
+        .insert({
+          user_id: user.id,
+          email: user.email || '',
+          name: user.email?.split('@')[0] || '사용자',
+          nickname: user.email?.split('@')[0] || 'user',
+          email_verified: user.email_confirmed_at !== null
+        });
+
+      if (insertUserError) {
+        console.error('사용자 생성 오류:', insertUserError);
+        alert('사용자 정보 생성에 실패했습니다: ' + insertUserError.message);
         return;
       }
-
-      // 3. 저장 성공 후 상태 업데이트
-      setPostsLoaded(false);
-      setUserSummary('');
-      alert('요약이 저장되었습니다!');
-
-      // 4. 저장 후 게시글 리스트 새로고침
-      await handleShowCommunityPosts();
-    } catch (error) {
-      console.error('요약 저장 실패:', error);
-      alert('요약 저장에 실패했습니다. 다시 시도해주세요.');
     }
-  };
+
+    // 2. summary 저장
+    const { error } = await supabase
+      .from('summary')
+      .insert({
+        user_summary: userSummary,
+        news_id: selectedNews!.news_id,
+        user_id: user.id
+      });
+
+    if (error) {
+      console.error('DB 저장 오류:', error);
+      alert('요약 저장에 실패했습니다: ' + error.message);
+      return;
+    }
+
+    // 3. 저장 성공 후 상태 업데이트
+    setPostsLoaded(false);
+    setUserSummary('');
+    alert('요약이 저장되었습니다!');
+
+    // 4. 저장 후 게시글 리스트 새로고침
+    await handleShowCommunityPosts();
+  } catch (error) {
+    console.error('요약 저장 실패:', error);
+    alert('요약 저장에 실패했습니다. 다시 시도해주세요.');
+  }
+};
 
 
   // 요약 화면 닫기
@@ -542,16 +561,16 @@ const submitFeedback = async (summaryId: number, optionId: number) => {
       return sum + feedbackCount;
     }, 0);
 
-    const mostLikedPost = communityPosts.length > 0
-      ? communityPosts.reduce((prev, current) =>
-        (current.likes_count > prev.likes_count) ? current : prev
-      )
+    const mostLikedPost = communityPosts.length > 0 
+      ? communityPosts.reduce((prev, current) => 
+          (current.likes_count > prev.likes_count) ? current : prev
+        )
       : null;
 
     return (
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <h3 className="text-lg font-semibold mb-4">📊 이 기사의 통계</h3>
-
+        
         <div className="grid grid-cols-3 gap-4 mb-4">
           <div className="text-center p-3 bg-blue-50 rounded-lg">
             <div className="text-2xl font-bold text-blue-600">{communityPosts.length}</div>
@@ -572,7 +591,7 @@ const submitFeedback = async (summaryId: number, optionId: number) => {
           <h4 className="text-sm font-medium mb-2 text-gray-700">피드백 분포</h4>
           <div className="flex gap-2 flex-wrap">
             {feedbackOptions.map(option => {
-              const count = communityPosts.reduce((sum, post) =>
+              const count = communityPosts.reduce((sum, post) => 
                 sum + (post.feedback_stats?.[option.id] || 0), 0
               );
               if (count === 0) return null;
@@ -590,14 +609,14 @@ const submitFeedback = async (summaryId: number, optionId: number) => {
         {mostLikedPost && mostLikedPost.likes_count > 0 && (
           <div className="pt-4 border-t">
             <h4 className="text-sm font-medium mb-2 text-gray-700">🏆 가장 인기있는 요약</h4>
-            <div className="bg-yellow-50 p-3 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-red-500 text-sm">❤️ {mostLikedPost.likes_count}</span>
-              </div>
-              <p className="text-sm text-gray-700 line-clamp-2">
-                {mostLikedPost.user_summary}
-              </p>
-            </div>
+           <div className="bg-yellow-50 p-3 rounded-lg">
+  <div className="flex items-center gap-2 mb-2">
+    <span className="text-red-500 text-sm">❤️ {mostLikedPost.likes_count}</span>
+  </div>
+  <p className="text-sm text-gray-700 line-clamp-2">
+    {mostLikedPost.user_summary}
+  </p>
+</div>
 
 
           </div>
@@ -635,12 +654,16 @@ const submitFeedback = async (summaryId: number, optionId: number) => {
   // 요약 화면이 열려있으면 해당 화면 렌더링
   if (selectedNews) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-6">
+      <div className="min-h-screen">
+        {/* 헤더 */}
+       
+
+        {/* 메인 컨텐츠 */}
+        <div className="container mx-auto px-4 py-6 bg-gradient-to-r from-indigo-50">
           <div className="mb-6 flex justify-between items-center">
             <button
               onClick={closeSummaryView}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm font-medium"
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-300 hover:bg-gray-200 rounded-lg transition-colors text-sm font-medium"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -661,123 +684,133 @@ const submitFeedback = async (summaryId: number, optionId: number) => {
             )}
           </div>
           {!showCommunityPosts ? (
-            /* 기사 원문 + 요약 작성 화면 */
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-140px)]">
-              {/* 왼쪽: 기사 원문 */}
-              <div className="bg-white rounded-lg shadow-md p-6 overflow-hidden flex flex-col">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="inline-block bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
-                    {getCategoryName(selectedNews.topic_id)}
-                  </span>
-                  <time className="text-sm text-gray-500">
-                    {formatDate(selectedNews.published_at)}
-                  </time>
-                </div>
+/* 기사 원문 + 요약 작성 화면 */
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-140px)]">
+  {/* 왼쪽: 기사 원문 */}
+  <div className="bg-white rounded-3xl shadow-lg border border-indigo-100 p-8 flex flex-col overflow-hidden">
+    <div className="flex items-center justify-between mb-4">
+      <span className="inline-block bg-indigo-100 text-indigo-700 text-sm px-3 py-1 rounded-full">
+        {getCategoryName(selectedNews.topic_id)}
+      </span>
+      <time className="text-sm text-gray-500">
+        {formatDate(selectedNews.published_at)}
+      </time>
+    </div>
 
-                <h2 className="text-xl font-bold mb-4 leading-tight">
-                  {selectedNews.title}
-                </h2>
+    <h2 className="text-2xl font-bold mb-6 leading-tight">
+      {selectedNews.title}
+    </h2>
 
-                {selectedNews.image_url && (
-                  <div className="mb-4 rounded-lg overflow-hidden">
-                    <img
-                      src={selectedNews.image_url}
-                      alt={selectedNews.title}
-                      className="w-full h-48 object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  </div>
-                )}
+    {selectedNews.image_url && (
+      <div className="mb-6 rounded-2xl overflow-hidden">
+        <img
+          src={selectedNews.image_url}
+          alt={selectedNews.title}
+          className="w-full h-60 object-cover"
+          onError={(e) => {(e.target as HTMLImageElement).style.display = 'none';}}
+        />
+      </div>
+    )}
 
-                <div className="flex-1 overflow-y-auto pr-2">
-                  <div className="prose prose-sm max-w-none">
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                      {selectedNews.content}
-                    </p>
-                  </div>
-                </div>
+    <div className="flex-1 overflow-y-auto pr-2">
+      <div className="prose prose-sm max-w-none">
+        <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+          {selectedNews.content}
+        </p>
+      </div>
+    </div>
 
-                <div className="mt-4 pt-4 border-t">
-                  <Link
-                    href={selectedNews.journal}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
-                  >
-                    원문 링크 보기
-                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </Link>
-                </div>
-              </div>
+    <div className="mt-4 pt-4 border-t border-indigo-100">
+      <Link 
+        href={selectedNews.journal} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="inline-flex items-center text-indigo-700 hover:text-indigo-900 text-sm font-medium"
+      >
+        원문 링크 보기
+        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+      </Link>
+    </div>
+  </div>
 
-              {/* 오른쪽: 사용자 요약 작성 및 AI 요약 */}
-              <div className="bg-white rounded-lg shadow-md p-6 flex flex-col">
-                {/* AI 요약 컴포넌트 추가 */}
-                <AiSummaryBox
-                  aiSummary={aiSummary}
-                  loadingAiSummary={loadingAiSummary}
-                  onGenerate={handleGenerateAiSummary}
-                />
-                
-                <div className="flex items-center justify-between mb-4 mt-2">
-                  <h3 className="text-lg font-semibold">나만의 기사 요약 작성</h3>
-                  <div className="text-sm text-gray-500">
-                    {userSummary.length}/500자
-                  </div>
-                </div>
+  {/* 오른쪽: 사용자 요약 작성 및 AI 요약 */}
+  <div className="bg-white rounded-3xl shadow-lg border border-indigo-100 p-8 flex flex-col">
+    {/* AI 요약 컴포넌트 */}
+    <AiSummaryBox
+      aiSummary={aiSummary}
+      loadingAiSummary={loadingAiSummary}
+      onGenerate={handleGenerateAiSummary}
+    />
+    
+    <div className="flex items-center justify-between mb-4 mt-4">
+      <h3 className="text-lg font-semibold text-gray-800">나만의 기사 요약 작성</h3>
+      <div className="text-sm text-gray-500">{userSummary.length}/500자</div>
+    </div>
 
-                <div className="mb-4">
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                    <h4 className="font-medium text-yellow-800 mb-2">📝 요약 작성 팁</h4>
-                    <ul className="text-sm text-yellow-700 space-y-1">
-                      <li>• 기사의 핵심 내용을 3-5문장으로 요약해보세요</li>
-                      <li>• 누가, 언제, 어디서, 무엇을, 왜, 어떻게를 포함해보세요</li>
-                      <li>• 객관적이고 중립적인 시각으로 작성해보세요</li>
-                    </ul>
-                  </div>
-                </div>
+    <div className="mb-4">
+      <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4">
+        <h4 className="font-medium text-yellow-800 mb-2">📝 요약 작성 팁</h4>
+        <ul className="text-sm text-yellow-700 space-y-1">
+          <li>• 기사의 핵심 내용을 3-5문장으로 요약해보세요</li>
+          <li>• 누가, 언제, 어디서, 무엇을, 왜, 어떻게를 포함해보세요</li>
+          <li>• 객관적이고 중립적인 시각으로 작성해보세요</li>
+        </ul>
+      </div>
+    </div>
 
-                <div className="flex-1 flex flex-col">
-                  <textarea
-                    value={userSummary}
-                    onChange={(e) => setUserSummary(e.target.value)}
-                    placeholder="이 기사를 읽고 나만의 요약을 작성해보세요...
+    <div className="flex-1 flex flex-col">
+      <textarea
+        value={userSummary}
+        onChange={(e) => setUserSummary(e.target.value)}
+        placeholder={`이 기사를 읽고 나만의 요약을 작성해보세요...
 
 예시:
 - 주요 사건이나 발표 내용
 - 관련된 인물이나 기관
 - 중요한 수치나 데이터
-- 향후 전망이나 영향"
-                    className="flex-1 w-full p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    maxLength={500}
-                  />
-                </div>
+- 향후 전망이나 영향`}
+        className="flex-1 w-full p-4 border border-gray-300 rounded-2xl resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+        maxLength={500}
+      />
+    </div>
 
-                <div className="mt-4 flex gap-3">
-                  <button
-                    onClick={() => setUserSummary('')}
-                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-                  >
-                    초기화
-                  </button>
-                  <button
-                    onClick={saveUserSummary}
-                    disabled={!userSummary.trim()}
-                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg transition-colors"
-                  >
-                    요약 저장하기
-                  </button>
-                  
-                </div>
-              </div>
-            </div>
+    <div className="mt-4 flex gap-3">
+      <button
+        onClick={() => setUserSummary('')}
+        className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors"
+      >
+        초기화
+      </button>
+      <button
+        onClick={saveUserSummary}
+        disabled={!userSummary.trim()}
+        className="flex-1 px-5 py-2.5 bg-indigo-700 hover:bg-indigo-600 disabled:bg-gray-300 text-white rounded-full transition-colors"
+      >
+        요약 저장하기
+      </button>
+    </div>
+  </div>
+</div>
+
+
           ) : (
             /* 커뮤니티 게시글 화면 */
             <div className="max-w-4xl mx-auto">
+              {/* 뒤로가기 버튼 */}
+              <div className="mb-6">
+                <button
+                  onClick={() => setShowCommunityPosts(false)}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  요약 작성으로 돌아가기
+                </button>
+              </div>
+
               {/* 기사 정보 */}
               <div className="bg-white rounded-lg shadow-md p-4 mb-6">
                 <div className="flex items-start gap-4">
@@ -807,7 +840,7 @@ const submitFeedback = async (summaryId: number, optionId: number) => {
               {/* 게시글 목록 */}
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">이 기사에 대한 다른 사용자들의 요약 ({communityPosts.length})</h3>
-
+                
                 {loadingPosts ? (
                   <div className="text-center py-8">
                     <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
@@ -823,18 +856,18 @@ const submitFeedback = async (summaryId: number, optionId: number) => {
                   <>
                     {communityPosts.map((post) => (
                       <div key={post.summary_id} className="bg-white rounded-lg shadow-md p-6">
-                        {/* 사용자 정보 */}
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-sm font-medium text-blue-600">
-                              {getRandomEmoji(post.summary_id)}
-                            </div>
-                            <div>
-                              <p className="font-medium">{generateAnonymousName(post.summary_id)}</p>
-                              <p className="text-sm text-gray-500">{formatDate(post.created_at)}</p>
-                            </div>
+                      {/* 사용자 정보 */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-sm font-medium text-blue-600">
+                            {getRandomEmoji(post.summary_id)}
+                          </div>
+                          <div>
+                            <p className="font-medium">{generateAnonymousName(post.summary_id)}</p>
+                            <p className="text-sm text-gray-500">{formatDate(post.created_at)}</p>
                           </div>
                         </div>
+                      </div>
 
 
                         {/* 요약 내용 */}
@@ -850,10 +883,10 @@ const submitFeedback = async (summaryId: number, optionId: number) => {
                             <button
                               onClick={() => toggleLike(post.summary_id)}
                               className={`flex items-center gap-2 px-3 py-1 rounded-full transition-colors ${
-                                post.is_liked
-                                  ? 'bg-red-100 text-red-600'
+                                post.is_liked 
+                                  ? 'bg-red-100 text-red-600' 
                                   : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-                                }`}
+                              }`}
                             >
                               <svg className="w-4 h-4" fill={post.is_liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -862,49 +895,40 @@ const submitFeedback = async (summaryId: number, optionId: number) => {
                             </button>
                           </div>
 
-                          {/* 피드백 옵션들 */}
-                          <div className="relative inline-block">
-                            <button
-                              onClick={() =>
-                                setFeedbackVisible(prev => ({ ...prev, [post.summary_id]: !prev[post.summary_id] }))
-                              }
-                              className="px-4 py-2 bg-indigo-900 text-white font-semibold rounded-lg shadow hover:bg-blue-600 transition-colors"
-                            >
-                              피드백 주기
-                            </button>
+              {/* 피드백 옵션들 */}
+                   <div className="relative inline-block">
+  <button
+    onClick={() =>
+      setFeedbackVisible(prev => ({ ...prev, [post.summary_id]: !prev[post.summary_id] }))
+    }
+    className="px-4 py-2 bg-indigo-900 text-white font-semibold rounded-lg shadow hover:bg-blue-600 transition-colors"
+  >
+    피드백 주기
+  </button>
 
-                            {/* ✅ 피드백 UI 개선 (선택 개수 표시) */}
-                            {feedbackVisible[post.summary_id] && (
+  {feedbackVisible[post.summary_id] && (
                               <div className="absolute z-10 mt-2 min-w-[200px] max-w-sm p-3 bg-white rounded-lg shadow-lg flex flex-col gap-2 right-0">
-                                {feedbackOptions.map(option => {
-                                  const selected = userFeedbacks[post.summary_id]?.includes(option.id);
-                                  const count = post.feedback_stats?.[option.id] || 0;
-                                  return (
-                                    <button
-                                      key={option.id}
-                                      onClick={() => submitFeedback(post.summary_id, option.id)}
-                                      className={`px-3 py-2 rounded-lg transition-colors text-left font-medium flex items-center justify-between ${
-                                        selected
-                                          ? 'bg-indigo-500 text-white'
-                                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                                        }`}
-                                    >
-                                      <span>{option.emoji} {option.content}</span>
-                                      {count > 0 && (
-                                        <span className={`text-xs ml-2 px-2 py-0.5 rounded-full ${
-                                          selected ? 'bg-indigo-400' : 'bg-gray-300'
-                                        }`}>
-                                          {count}
-                                        </span>
-                                      )}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
+      {feedbackOptions.map(option => {
+        const selected = userFeedbacks[post.summary_id]?.includes(option.id);
+        return (
+          <button
+            key={option.id}
+            onClick={() => submitFeedback(post.summary_id, option.id)}
+            className={`px-3 py-2 rounded-lg transition-colors text-left font-medium ${
+              selected
+                ? 'bg-indigo-500 text-white'
+                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+            }`}
+          >
+            {option.emoji} {option.content}
+          </button>
+        );
+      })}
+    </div>
+  )}
+</div>
 
-
+                        
                         </div>
                       </div>
                     ))}
@@ -922,16 +946,16 @@ const submitFeedback = async (summaryId: number, optionId: number) => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8 text-center">최신 뉴스</h1>
-
+      
       {/* 카테고리 필터 */}
       <div className="flex flex-wrap justify-center gap-2 mb-8">
         <button
           onClick={() => handleCategoryChange(null)}
           className={`px-4 py-2 rounded-full transition-colors ${
-            selectedCategory === null
-              ? 'bg-indigo-600 text-white'
+            selectedCategory === null 
+              ? 'bg-indigo-600 text-white' 
               : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-            }`}
+          }`}
         >
           전체
         </button>
@@ -940,10 +964,10 @@ const submitFeedback = async (summaryId: number, optionId: number) => {
             key={category.id}
             onClick={() => handleCategoryChange(category.id)}
             className={`px-4 py-2 rounded-full transition-colors ${
-              selectedCategory === category.id
-                ? 'bg-indigo-600 text-white'
+              selectedCategory === category.id 
+                ? 'bg-indigo-600 text-white' 
                 : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-              }`}
+            }`}
           >
             {category.name}
           </button>
@@ -981,7 +1005,7 @@ const submitFeedback = async (summaryId: number, optionId: number) => {
                     />
                   </div>
                 )}
-
+                
                 <div className="p-4">
                   {/* 카테고리 태그 */}
                   <div className="flex items-center justify-between mb-2">
@@ -1007,9 +1031,9 @@ const submitFeedback = async (summaryId: number, optionId: number) => {
 
                   {/* 버튼들 */}
                   <div className="flex gap-2">
-                    <Link
-                      href={item.journal}
-                      target="_blank"
+                    <Link 
+                      href={item.journal} 
+                      target="_blank" 
                       rel="noopener noreferrer"
                       className="flex-1 inline-flex items-center justify-center text-indigo-600 hover:text-blue-800 text-sm font-medium border border-blue-200 hover:border-blue-300 rounded-lg py-2 px-3 transition-colors"
                     >
@@ -1018,7 +1042,7 @@ const submitFeedback = async (summaryId: number, optionId: number) => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                       </svg>
                     </Link>
-
+                    
                     <button
                       onClick={() => handleSummarizeClick(item)}
                       className="flex-1 inline-flex items-center justify-center bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg py-2 px-3 transition-colors"
@@ -1045,3 +1069,4 @@ const submitFeedback = async (summaryId: number, optionId: number) => {
     </div>
   );
 }
+

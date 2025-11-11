@@ -4,11 +4,11 @@
 import Link from "next/link";
 
 type Topic = {
-  slug: string;          // URL에 사용 (예: /levelup/politics/level/1)
-  label: string;         // 카드 표기 (한글)
-  emoji: string;         // 아이콘
-  hint: string;          // 짧은 설명
-  badgeClass: string;    // 배지 색상
+  slug: string;
+  label: string;
+  emoji: string;
+  hint: string;
+  badgeClass: string;
 };
 
 const TOPICS: Topic[] = [
@@ -22,8 +22,9 @@ const TOPICS: Topic[] = [
 
 export default function LevelUpHome() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="min-h-screen bg-gray-50 flex justify-center rounded-3xl">
+     <main className="space-y-24 px-6 py-10 bg-gradient-to-b from-white to-indigo-50 rounded-xl w-full max-w-6xl">
+
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">레벨업 모드</h1>
           <p className="text-gray-600 mt-2">
@@ -38,20 +39,20 @@ export default function LevelUpHome() {
             <Link
               key={t.slug}
               href={`/levelup/${t.slug}/level1`}
-              className="group block bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-gray-300 transition-all"
+              className="group block bg-white rounded-3xl border border-indigo-100 p-6 shadow-lg hover:shadow-xl hover:border-indigo-200 transition-all"
             >
-              <div className="flex items-center justify-between mb-3">
-                <span className={`text-xs px-2 py-1 rounded ${t.badgeClass}`}>
+              <div className="flex items-center justify-between mb-4">
+                <span className={`text-xs px-3 py-1 rounded-full font-medium ${t.badgeClass}`}>
                   {t.label}
                 </span>
-                <span className="text-2xl">{t.emoji}</span>
+                <span className="text-3xl">{t.emoji}</span>
               </div>
-              <h2 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+              <h2 className="text-xl font-semibold text-gray-900 group-hover:text-indigo-700 transition-colors">
                 {t.label} 레벨업 시작
               </h2>
-              <p className="text-gray-600 mt-1">{t.hint}</p>
+              <p className="text-gray-600 mt-2">{t.hint}</p>
 
-              <div className="mt-4 flex items-center text-sm text-blue-600 group-hover:translate-x-0.5 transition-transform">
+              <div className="mt-4 flex items-center text-sm text-indigo-700 group-hover:translate-x-1 transition-transform">
                 레벨 1로 이동하기
                 <span className="ml-1">→</span>
               </div>

@@ -66,7 +66,7 @@ export default function RegisterPage() {
   };
 
 return (
-  <div className="min-h-screen bg-[#F8F8FC] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+  <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
     <div className="sm:mx-auto sm:w-full sm:max-w-md">
       <div className="text-center">
         <h1 className="text-3xl font-bold text-indigo-900">줏대 있게 살아</h1>

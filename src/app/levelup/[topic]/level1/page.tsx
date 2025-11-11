@@ -259,6 +259,20 @@ const handleSubmit = async () => {
     );
   }
 
+  // ✅ topic에 따른 한글 이름 및 아이콘 매핑
+const topicTitles: Record<string, { emoji: string; name: string }> = {
+  economy: { emoji: "💰", name: "경제" },
+  society: { emoji: "🧠", name: "사회" },
+  culture: { emoji: "🎭", name: "문화" },
+  politics: { emoji: "🏛️", name: "정치" },
+  science: { emoji: "🔬", name: "과학" },
+};
+
+// ✅ 현재 토픽에 맞는 타이틀 설정
+const currentTopic =
+  topicTitles[String(topic)] || { emoji: "📰", name: "일반" };
+
+
   if (!news) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center text-gray-500">
@@ -274,9 +288,22 @@ const handleSubmit = async () => {
   }
 
 return (
-  <div className="min-h-screen bg-gray-50">
+  <div className="min-h-screen bg-white">
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+        {/* 상단 타이틀 영역 */}
+      <header className="text-center mb-12">
+        <h1 className="text-4xl font-extrabold text-gray-800 mb-3">
+          {currentTopic.emoji} {currentTopic.name} 레벨업
+        </h1>
+        <p className="text-gray-600 text-lg">
+          뉴스를 파악하여 문제를 풀어보세요. 모든 정답을 맞히면 다음 단계로 이동합니다!
+        </p>
+        <div className="mt-6 h-1 w-24 bg-blue-600 mx-auto rounded-full"></div>
+      </header>
       <div className="flex flex-col lg:flex-row gap-8">
+
+        
         {/* 뉴스 */}
         <article className="bg-white rounded-3xl shadow-lg border border-gray-200 p-8 flex-1 transition hover:shadow-xl">
           {news.image_url && (
@@ -367,7 +394,7 @@ return (
               {/* 제출 버튼 */}
               <button
                 onClick={handleSubmit}
-                className="mt-6 w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition"
+                className="mt-6 w-full bg-indigo-400 text-white py-3 rounded-xl hover:bg-blue-700 transition"
               >
                 제출하기
               </button>

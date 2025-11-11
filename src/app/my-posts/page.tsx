@@ -153,13 +153,7 @@ export default function MyPostsPage() {
         })
       );
 
-      setPosts(postsWithStats as MyPost[]);
-    } catch (error) {
-      console.error('게시글 가져오기 실패:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+     
 
   useEffect(() => {
     if (user) {
@@ -353,7 +347,7 @@ export default function MyPostsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen  bg-gradient-to-b from-white to-indigo-50 rounded-xl">
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">내가 쓴 글</h1>
