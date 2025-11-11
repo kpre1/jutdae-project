@@ -110,6 +110,7 @@ export default function MyPostsPage() {
       let filteredData = data || [];
       if (selectedCategory) {
         filteredData = filteredData.filter(post => 
+          // @ts-ignore
           post.news?.topic_id === selectedCategory
         );
       }
@@ -154,6 +155,8 @@ const postsWithStats = await Promise.all(
 );
 
 // ✅ 여기 추가
+
+// @ts-ignore
 setPosts(postsWithStats);
 
 } catch (error) {
