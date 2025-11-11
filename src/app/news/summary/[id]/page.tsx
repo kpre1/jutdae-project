@@ -173,7 +173,8 @@ export default function NewsSummaryPage() {
                 홈
               </Link>
               
-              <span className="text-gray-700">{user?.email}</span>
+              <span className="text-gray-700">{(user as any)?.email}</span>
+
             </div>
           </div>
         </div>
@@ -187,27 +188,31 @@ export default function NewsSummaryPage() {
               <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
                 <BookOpen className="w-4 h-4" />
                 <span>원문 뉴스</span>
-                {newsData?.category_id && (
+                
+                {(newsData as any)?.category_id && (
                   <>
                     <span>•</span>
                     <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
-                      {getCategoryName(newsData.category_id)}
+                      {getCategoryName((newsData as any).category_id)}
+
                     </span>
                   </>
                 )}
               </div>
               <h1 className="text-2xl font-bold text-gray-900 mb-4">
                 
-                {newsData?.title || '뉴스 제목'}
+                {(newsData as any)?.title || '뉴스 제목'}
+
               </h1>
               <div className="flex items-center space-x-4 text-sm text-gray-500">
                 <div className="flex items-center space-x-1">
                   <Calendar className="w-4 h-4" />
-                  <span>{newsData?.published_at ? formatDate(newsData.published_at) : '날짜 정보 없음'}</span>
+                  <span>{(newsData as any)?.published_at ? formatDate((newsData as any).published_at) : '날짜 정보 없음'}
+</span>
                 </div>
-                {newsData?.link && (
+                {(newsData as any)?.link && (
                   <a 
-                    href={newsData.link} 
+                    href={(newsData as any).link}
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-500 flex items-center space-x-1"
@@ -221,16 +226,16 @@ export default function NewsSummaryPage() {
             
             <div className="p-6">
               
-              {newsData?.image_url && (
+             {(newsData as any)?.image_url && (
                 <img
-                  src={newsData.image_url}
-                  alt={newsData.title}
+                  src={(newsData as any).image_url}
+                  alt={(newsData as any).title || '뉴스 제목'}
                   className="w-full rounded-lg mb-6"
                 />
               )}
               <div className="prose max-w-none">
                 <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
-                  {newsData?.content || '뉴스 내용을 불러오는 중...'}
+                   {(newsData as any)?.content || '뉴스 내용을 불러오는 중...'}
                 </div>
               </div>
             </div>
